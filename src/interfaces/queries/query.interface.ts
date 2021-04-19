@@ -1,0 +1,2 @@
+/** Query */
+export interface IQuery {}

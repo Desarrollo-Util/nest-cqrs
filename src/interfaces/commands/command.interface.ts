@@ -1,0 +1,2 @@
+/** Command */
+export interface ICommand {}

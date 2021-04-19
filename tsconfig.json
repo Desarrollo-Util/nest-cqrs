@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "removeComments": false,
+    "noLib": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "target": "es6",
+    "sourceMap": false,
+    "outDir": "./dist",
+    "baseUrl": "./src",
+    "paths": {
+      "@Commands/*": ["commands/*"],
+      "@Queries/*": ["queries/*"],
+      "@Events/*": ["events/*"],
+      "@Exceptions/*": ["exceptions/*"],
+      "@Interfaces/*": ["interfaces/*"],
+      "@Decorators/*": ["decorators/*"],
+      "@Constants/*": ["constants/*"],
+      "@Services/*": ["services/*"],
+    }
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts"
+  ]
+}
