@@ -1,5 +1,5 @@
-import { RabbitMQErrorHandlerTypes } from '@Constants/rabbitmq/rabbitmq-error-handler-types.enum';
 import amqpConnectionManager from 'amqp-connection-manager';
+import { RabbitMQErrorHandlerTypes } from '../../constants/rabbitmq/rabbitmq-error-handler-types.enum';
 import { RabbitMQExchangeConfig } from './rabbitmq-exchange-config.interface';
 
 /** Initialize connection options */
@@ -28,4 +28,14 @@ export interface RabbitMQConfig {
 	connectionInitOptions: ConnectionInitOptions;
 	/** Connection manager options */
 	connectionManagerOptions?: amqpConnectionManager.AmqpConnectionManagerOptions;
+}
+
+export interface RabbitMQModuleConfig
+	extends Omit<RabbitMQConfig, 'exchanges'> {
+	/** Exchange common prefix */
+	prefix: string;
+	/** Dead letter TTL*/
+	deadLetterTtl: number;
+	/** Callback to execute when connection close */
+	onConnectionClose: () => void;
 }

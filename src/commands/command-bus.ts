@@ -1,6 +1,6 @@
-import { ICommand } from '@Interfaces/commands/command.interface';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import { ICommand } from '../interfaces/commands/command.interface';
 import { BaseCommandBus } from './base-command-bus';
 
 /** Command bus */

@@ -1,10 +1,11 @@
-import { IEvent } from '@Interfaces/events/event.interface';
 import uuid from 'uuid-random';
+import { IEvent } from '../interfaces/events/event.interface';
 
 /**
  * Event
  */
-export abstract class Event<T> implements IEvent<T> {
+export abstract class Event<T extends Record<string, any>>
+	implements IEvent<T> {
 	/** Event id*/
 	public readonly id: string;
 	/** Event created at date */

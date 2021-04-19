@@ -1,11 +1,11 @@
-import { COMMAND_HANDLER_METADATA } from '@Constants/reflect-keys.constants';
-import { InvalidQueryHandlerException } from '@Exceptions/invalid-query-handler.exception';
-import { QueryHandlerNotFoundException } from '@Exceptions/query-not-found.exception';
-import { IQueryBus } from '@Interfaces/queries/query-bus.interface';
-import { IQueryHandler } from '@Interfaces/queries/query-handler.interface';
-import { IQuery } from '@Interfaces/queries/query.interface';
 import { Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import { QUERY_HANDLER_METADATA } from '../constants/reflect-keys.constants';
+import { InvalidQueryHandlerException } from '../exceptions/invalid-query-handler.exception';
+import { QueryHandlerNotFoundException } from '../exceptions/query-not-found.exception';
+import { IQueryBus } from '../interfaces/queries/query-bus.interface';
+import { IQueryHandler } from '../interfaces/queries/query-handler.interface';
+import { IQuery } from '../interfaces/queries/query.interface';
 
 /** Query handler class */
 type QueryHandlerType = Type<IQueryHandler<IQuery>>;
@@ -64,7 +64,7 @@ export abstract class BaseQueryBus<QueryBase extends IQuery = IQuery>
 	 */
 	protected reflectQueryName(handler: QueryHandlerType): string {
 		const target: FunctionConstructor | undefined = Reflect.getMetadata(
-			COMMAND_HANDLER_METADATA,
+			QUERY_HANDLER_METADATA,
 			handler
 		);
 

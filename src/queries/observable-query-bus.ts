@@ -1,7 +1,7 @@
-import { IQuery } from '@Interfaces/queries/query.interface';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Subject } from 'rxjs';
+import { IQuery } from '../interfaces/queries/query.interface';
 import { BaseQueryBus } from './base-query-bus';
 
 /** Query bus */

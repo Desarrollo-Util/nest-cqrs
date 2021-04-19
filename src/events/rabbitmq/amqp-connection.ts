@@ -1,14 +1,15 @@
-import { RabbitMQErrorHandlerTypes } from '@Constants/rabbitmq/rabbitmq-error-handler-types.enum';
-import {
-	ConnectionInitOptions,
-	RabbitMQConfig,
-} from '@Interfaces/rabbitmq/rabbitmq-config.interface';
-import { MessageHandlerOptions } from '@Interfaces/rabbitmq/rabbitmq-message-handler-options.interface';
 import { Logger } from '@nestjs/common';
 import amqpcon from 'amqp-connection-manager';
 import amqplib from 'amqplib';
 import { EMPTY, Subject, throwError } from 'rxjs';
 import { catchError, take, timeoutWith } from 'rxjs/operators';
+import { RabbitMQErrorHandlerTypes } from '../../constants/rabbitmq/rabbitmq-error-handler-types.enum';
+import { IEvent } from '../../interfaces/events/event.interface';
+import {
+	ConnectionInitOptions,
+	RabbitMQConfig,
+} from '../../interfaces/rabbitmq/rabbitmq-config.interface';
+import { MessageHandlerOptions } from '../../interfaces/rabbitmq/rabbitmq-message-handler-options.interface';
 
 export interface CorrelationMessage {
 	correlationId: string;
@@ -160,7 +161,7 @@ export class AmqpConnection {
 	}
 
 	public async createSubscriber<T>(
-		handler: (msg: T) => Promise<void>,
+		handler: (msg: T) => void | Promise<void>,
 		msgOptions: MessageHandlerOptions
 	) {
 		return this._managedChannel.addSetup(channel =>
@@ -169,7 +170,7 @@ export class AmqpConnection {
 	}
 
 	private async setupSubscriberChannel<T>(
-		handler: (msg: T) => Promise<void>,
+		handler: (msg: T) => void | Promise<void>,
 		msgOptions: MessageHandlerOptions,
 		channel: amqplib.ConfirmChannel
 	): Promise<void> {
@@ -200,6 +201,7 @@ export class AmqpConnection {
 
 				channel.ack(msg);
 			} catch (e) {
+				console.log('ERROR', e);
 				this.errorHandler(
 					msgOptions.errorHandler || this.config.defaultSubscribeErrorBehavior,
 					channel,
@@ -240,8 +242,7 @@ export class AmqpConnection {
 	public async publish(
 		exchange: string,
 		routingKey: string,
-		// TODO: Especificar esto
-		message: any,
+		message: IEvent,
 		options?: amqplib.Options.Publish
 	) {
 		if (!this.managedConnection.isConnected() || !this._channel)

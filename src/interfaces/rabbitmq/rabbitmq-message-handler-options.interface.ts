@@ -1,4 +1,4 @@
-import { RabbitMQErrorHandlerTypes } from '@Constants/rabbitmq/rabbitmq-error-handler-types.enum';
+import { RabbitMQErrorHandlerTypes } from '../../constants/rabbitmq/rabbitmq-error-handler-types.enum';
 import { QueueOptions } from './rabbitmq-queue-options.interface';
 
 export interface MessageHandlerOptions {

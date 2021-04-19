@@ -1,6 +1,5 @@
-import { QUERY_HANDLER_METADATA } from '@Constants/reflect-keys.constants';
-import { IQuery } from '@Interfaces/queries/query.interface';
-import 'reflect-metadata';
+import { QUERY_HANDLER_METADATA } from '../constants/reflect-keys.constants';
+import { IQuery } from '../interfaces/queries/query.interface';
 
 /**
  * Decorator that marks a class as a CQRS query handler. A query handler

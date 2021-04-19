@@ -1,7 +1,6 @@
 import { Type } from '@nestjs/common';
 import { ICommandHandler } from './commands/command-handler.interface';
 import { IEventHandler } from './events/event-handler.interface';
-import { IEvent } from './events/event.interface';
 import { IQueryHandler } from './queries/query-handler.interface';
 
 /** CQRS module options */
@@ -11,5 +10,5 @@ export interface CqrsOptions {
 	/** Commands */
 	commands?: Type<ICommandHandler>[];
 	/** Events */
-	events?: Type<IEventHandler<IEvent<any>>>[];
+	events?: Type<IEventHandler>[];
 }

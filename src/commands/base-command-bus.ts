@@ -1,11 +1,11 @@
-import { COMMAND_HANDLER_METADATA } from '@Constants/reflect-keys.constants';
-import { CommandHandlerNotFoundException } from '@Exceptions/command-not-found.exception';
-import { InvalidCommandHandlerException } from '@Exceptions/invalid-command-handler.exception';
-import { ICommandBus } from '@Interfaces/commands/command-bus.interface';
-import { ICommandHandler } from '@Interfaces/commands/command-handler.interface';
-import { ICommand } from '@Interfaces/commands/command.interface';
 import { Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import { COMMAND_HANDLER_METADATA } from '../constants/reflect-keys.constants';
+import { CommandHandlerNotFoundException } from '../exceptions/command-not-found.exception';
+import { InvalidCommandHandlerException } from '../exceptions/invalid-command-handler.exception';
+import { ICommandBus } from '../interfaces/commands/command-bus.interface';
+import { ICommandHandler } from '../interfaces/commands/command-handler.interface';
+import { ICommand } from '../interfaces/commands/command.interface';
 
 /** Command handler class */
 type CommandHandlerType = Type<ICommandHandler<ICommand>>;

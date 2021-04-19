@@ -1,6 +1,5 @@
-import { COMMAND_HANDLER_METADATA } from '@Constants/reflect-keys.constants';
-import { ICommand } from '@Interfaces/commands/command.interface';
-import 'reflect-metadata';
+import { COMMAND_HANDLER_METADATA } from '../constants/reflect-keys.constants';
+import { ICommand } from '../interfaces/commands/command.interface';
 
 /**
  * Decorator that marks a class as a CQRS command handler. A command handler

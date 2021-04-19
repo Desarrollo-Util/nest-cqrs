@@ -10,20 +10,14 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "target": "es6",
-    "sourceMap": false,
+    "target": "es2017",
+    "lib": [
+      "es2017",
+      "es7",
+      "es6"
+    ],
+    "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./src",
-    "paths": {
-      "@Commands/*": ["commands/*"],
-      "@Queries/*": ["queries/*"],
-      "@Events/*": ["events/*"],
-      "@Exceptions/*": ["exceptions/*"],
-      "@Interfaces/*": ["interfaces/*"],
-      "@Decorators/*": ["decorators/*"],
-      "@Constants/*": ["constants/*"],
-      "@Services/*": ["services/*"],
-    }
   },
   "include": [
     "src/**/*"
