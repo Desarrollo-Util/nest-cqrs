@@ -1,6 +1,6 @@
 import { Type } from '@nestjs/common';
 import { EVENTS_HANDLER_METADATA } from '../constants/reflect-keys.constants';
-import { EventQueueOptions } from '../interfaces/events/event-queue-options';
+import { IEventMetadata } from '../interfaces/events/event-metadata.interface';
 import { IEvent } from '../interfaces/events/event.interface';
 
 /**
@@ -20,10 +20,10 @@ export const EventsHandler = (
 		Reflect.defineMetadata(
 			EVENTS_HANDLER_METADATA,
 			{
-				queueName: `${prefix}-${event.name}-${action.name}`,
-				routingKey: event.name,
-				retryRoutingKey: `retry-${prefix}-${event.name}-${action.name}`,
-			} as EventQueueOptions,
+				eventPrefix: prefix,
+				eventName: event.name,
+				actionName: action.name,
+			} as IEventMetadata,
 			target
 		);
 	};

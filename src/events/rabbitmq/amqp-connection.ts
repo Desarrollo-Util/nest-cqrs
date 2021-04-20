@@ -9,7 +9,7 @@ import {
 	ConnectionInitOptions,
 	RabbitMQConfig,
 } from '../../interfaces/rabbitmq/rabbitmq-config.interface';
-import { MessageHandlerOptions } from '../../interfaces/rabbitmq/rabbitmq-message-handler-options.interface';
+import { IRabbitMQMessageOptions } from '../../interfaces/rabbitmq/rabbitmq-message-options.interface';
 
 export interface CorrelationMessage {
 	correlationId: string;
@@ -27,6 +27,7 @@ const defaultConfig: Omit<RabbitMQConfig, 'uri'> = {
 		reject: true,
 	},
 	connectionManagerOptions: {},
+	onConnectionClose: () => Logger.warn('Lost connection to RabbitMQ'),
 };
 
 export class AmqpConnection {
@@ -78,7 +79,7 @@ export class AmqpConnection {
 
 		this.initConnection();
 		this.initChannel();
-		const promise = this.setupInitChannel();
+		const promise = this.setupInitChannel(this.config.onConnectionClose);
 		if (!wait) return promise;
 
 		return this.initialized
@@ -139,8 +140,9 @@ export class AmqpConnection {
 
 	/**
 	 * Initializes channel exchanges and prefetch messages
+	 * @param onConnectionClose Callback triggered when channel closes
 	 */
-	private async setupInitChannel(): Promise<void> {
+	private async setupInitChannel(onConnectionClose: () => void): Promise<void> {
 		await this._managedChannel.addSetup(
 			async (channel: amqplib.ConfirmChannel) => {
 				this._channel = channel;
@@ -155,6 +157,9 @@ export class AmqpConnection {
 
 				await channel.prefetch(this.config.prefetchCount);
 
+				// TODO: Revisar si esto es correcto aquí
+				channel.once('close', onConnectionClose);
+
 				this.initialized.next();
 			}
 		);
@@ -162,7 +167,7 @@ export class AmqpConnection {
 
 	public async createSubscriber<T>(
 		handler: (msg: T) => void | Promise<void>,
-		msgOptions: MessageHandlerOptions
+		msgOptions: IRabbitMQMessageOptions
 	) {
 		return this._managedChannel.addSetup(channel =>
 			this.setupSubscriberChannel<T>(handler, msgOptions, channel)
@@ -171,13 +176,13 @@ export class AmqpConnection {
 
 	private async setupSubscriberChannel<T>(
 		handler: (msg: T) => void | Promise<void>,
-		msgOptions: MessageHandlerOptions,
+		msgOptions: IRabbitMQMessageOptions,
 		channel: amqplib.ConfirmChannel
 	): Promise<void> {
-		const { exchange, routingKey } = msgOptions;
+		const { exchangeName: exchange, routingKey } = msgOptions;
 
 		const { queue } = await channel.assertQueue(
-			msgOptions.queue || '',
+			msgOptions.queueName,
 			msgOptions.queueOptions || undefined
 		);
 

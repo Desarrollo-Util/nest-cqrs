@@ -28,6 +28,8 @@ export interface RabbitMQConfig {
 	connectionInitOptions: ConnectionInitOptions;
 	/** Connection manager options */
 	connectionManagerOptions?: amqpConnectionManager.AmqpConnectionManagerOptions;
+	/** Callback to execute when connection close */
+	onConnectionClose: () => void;
 }
 
 export interface RabbitMQModuleConfig
@@ -36,6 +38,4 @@ export interface RabbitMQModuleConfig
 	prefix: string;
 	/** Dead letter TTL*/
 	deadLetterTtl: number;
-	/** Callback to execute when connection close */
-	onConnectionClose: () => void;
 }

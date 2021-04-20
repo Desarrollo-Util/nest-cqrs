@@ -20,7 +20,7 @@ import {
 	DITokenQueryBus,
 	InjectQueryBus,
 } from '../decorators/inject-query-bus.decorator';
-import { RabbitEventBus } from '../events/event-bus';
+import { RabbitEventBus } from '../events/rabbitmq/rabbitmq-event-bus';
 import { ICommandBus, IEventBus, IQueryBus } from '../interfaces';
 import { RabbitMQModuleConfig } from '../interfaces/rabbitmq/rabbitmq-config.interface';
 import { QueryBus } from '../queries/query-bus';

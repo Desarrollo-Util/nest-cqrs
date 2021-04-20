@@ -10,5 +10,5 @@ export * from './queries/query-handler.interface';
 export * from './queries/query.interface';
 export * from './rabbitmq/rabbitmq-config.interface';
 export * from './rabbitmq/rabbitmq-exchange-config.interface';
-export * from './rabbitmq/rabbitmq-message-handler-options.interface';
+export * from './rabbitmq/rabbitmq-message-options.interface';
 export * from './rabbitmq/rabbitmq-queue-options.interface';
