@@ -8,7 +8,7 @@ export class UnregisteredEventHandlerMetadataException extends CqrsException {
 	 */
 	constructor(handlerName: string) {
 		super(
-			`Unregistered event handler for ${handlerName} (missing @EventHandler() decorator?)`
+			`Unregistered metadata for ${handlerName} (missing @EventHandler() decorator?)`
 		);
 	}
 }

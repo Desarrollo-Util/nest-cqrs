@@ -1,4 +1,4 @@
-import { CqrsException } from './cqrs.exception';
+import { CqrsException } from '../cqrs.exception';
 
 /** Command handler not found */
 export class CommandHandlerNotFoundException extends CqrsException {

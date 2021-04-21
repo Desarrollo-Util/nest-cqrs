@@ -1,4 +1,4 @@
-import { CqrsException } from './cqrs.exception';
+import { CqrsException } from '../cqrs.exception';
 
 /** Query handler not found */
 export class QueryHandlerNotFoundException extends CqrsException {

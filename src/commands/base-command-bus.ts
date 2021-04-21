@@ -1,8 +1,8 @@
 import { Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { COMMAND_HANDLER_METADATA } from '../constants/reflect-keys.constants';
-import { CommandHandlerNotFoundException } from '../exceptions/command-not-found.exception';
-import { InvalidCommandHandlerException } from '../exceptions/invalid-command-handler.exception';
+import { CommandHandlerNotFoundException } from '../exceptions/commands/command-handler-not-found.exception';
+import { UnregisteredCommandHandlerException } from '../exceptions/commands/unregistered-command-handler-metadata.exception';
 import { ICommandBus } from '../interfaces/commands/command-bus.interface';
 import { ICommandHandler } from '../interfaces/commands/command-handler.interface';
 import { ICommand } from '../interfaces/commands/command.interface';
@@ -71,7 +71,7 @@ export abstract class BaseCommandBus<CommandBase extends ICommand = ICommand>
 			handler
 		);
 
-		if (!target) throw new InvalidCommandHandlerException();
+		if (!target) throw new UnregisteredCommandHandlerException(handler.name);
 
 		return target.name;
 	}

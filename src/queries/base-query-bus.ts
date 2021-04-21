@@ -1,8 +1,8 @@
 import { Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { QUERY_HANDLER_METADATA } from '../constants/reflect-keys.constants';
-import { InvalidQueryHandlerException } from '../exceptions/invalid-query-handler.exception';
-import { QueryHandlerNotFoundException } from '../exceptions/query-not-found.exception';
+import { QueryHandlerNotFoundException } from '../exceptions/queries/query-handler-not-found.exception';
+import { UnregisteredQueryHandlerMetadataException } from '../exceptions/queries/unregistered-query-handler-metadata.exception';
 import { IQueryBus } from '../interfaces/queries/query-bus.interface';
 import { IQueryHandler } from '../interfaces/queries/query-handler.interface';
 import { IQuery } from '../interfaces/queries/query.interface';
@@ -68,7 +68,8 @@ export abstract class BaseQueryBus<QueryBase extends IQuery = IQuery>
 			handler
 		);
 
-		if (!target) throw new InvalidQueryHandlerException();
+		if (!target)
+			throw new UnregisteredQueryHandlerMetadataException(handler.name);
 
 		return target.name;
 	}
