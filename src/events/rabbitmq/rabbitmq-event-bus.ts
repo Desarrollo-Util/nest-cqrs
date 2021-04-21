@@ -1,7 +1,10 @@
-import { Injectable, Type } from '@nestjs/common';
+import { Injectable, Logger, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { ConfirmChannel, Options } from 'amqplib';
 import { EVENTS_HANDLER_METADATA } from '../../constants/reflect-keys.constants';
+import { EventBusNotInitializedException } from '../../exceptions/events/event-bus-not-initialized.exception';
+import { UnregisteredEventHandlerMetadataException } from '../../exceptions/events/unregistered-event-handler-metadata.exception';
+import { WrongEventHandlerMetadataException } from '../../exceptions/events/wrong-event-handler-metadata.exception';
 import { IEventBus } from '../../interfaces/events/event-bus.interface';
 import { IEventHandler } from '../../interfaces/events/event-handler.interface';
 import { IEventMetadata } from '../../interfaces/events/event-metadata.interface';
@@ -64,21 +67,22 @@ export class RabbitEventBus implements IEventBus {
 	 * @param eventHandler Event handler
 	 */
 	public async register(eventHandler: Type<IEventHandler>): Promise<void> {
-		// TODO: Formatear los errores
 		if (!this.isConnectionInitialized)
-			throw new Error(
-				'Trying to register an event handler without initialize connection'
-			);
+			throw new EventBusNotInitializedException();
 
 		const instance = this.moduleRef.get(eventHandler, { strict: false });
-		if (!instance) return;
+		if (!instance) {
+			Logger.warn(`Not found instance for ${eventHandler.name}`);
+			return;
+		}
 
 		const metadata = this.reflectHandlerMetadata(eventHandler);
-		if (!metadata) throw new Error('Unregistered event handler');
+		if (!metadata)
+			throw new UnregisteredEventHandlerMetadataException(eventHandler.name);
 
 		const { eventPrefix, eventName, actionName } = metadata;
 		if (!eventPrefix || !eventName || !actionName)
-			throw new Error('Bad registration of event handler');
+			throw new WrongEventHandlerMetadataException(eventHandler.name);
 
 		const {
 			queueName,
@@ -115,11 +119,8 @@ export class RabbitEventBus implements IEventBus {
 	 * @param event Event
 	 */
 	public async publish(event: IEvent): Promise<void> {
-		// TODO: Formatear los errores
 		if (!this.isConnectionInitialized)
-			throw new Error(
-				'Trying to publish an event without initialize connection'
-			);
+			throw new EventBusNotInitializedException();
 
 		await this._amqpConnection.publish(
 			this._domainExchange,
@@ -277,8 +278,7 @@ export class RabbitEventBus implements IEventBus {
 		return {
 			exchangeName: this._domainExchange,
 			routingKey: routingKeyArray,
-			// TODO: Esto es necesario?
-			queueName: queueName,
+			queueName,
 			queueOptions: {
 				deadLetterExchange: this._deadLetterExchange,
 				deadLetterRoutingKey: retryRoutingKey,

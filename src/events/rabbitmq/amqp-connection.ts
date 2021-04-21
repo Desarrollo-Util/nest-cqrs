@@ -27,7 +27,6 @@ const defaultConfig: Omit<RabbitMQConfig, 'uri'> = {
 		reject: true,
 	},
 	connectionManagerOptions: {},
-	onConnectionClose: () => Logger.warn('Lost connection to RabbitMQ'),
 };
 
 export class AmqpConnection {
@@ -142,7 +141,9 @@ export class AmqpConnection {
 	 * Initializes channel exchanges and prefetch messages
 	 * @param onConnectionClose Callback triggered when channel closes
 	 */
-	private async setupInitChannel(onConnectionClose: () => void): Promise<void> {
+	private async setupInitChannel(
+		onConnectionClose?: () => void
+	): Promise<void> {
 		await this._managedChannel.addSetup(
 			async (channel: amqplib.ConfirmChannel) => {
 				this._channel = channel;
@@ -157,8 +158,12 @@ export class AmqpConnection {
 
 				await channel.prefetch(this.config.prefetchCount);
 
-				// TODO: Revisar si esto es correcto aquí
-				channel.once('close', onConnectionClose);
+				channel.once(
+					'close',
+					onConnectionClose
+						? onConnectionClose
+						: () => this.logger.log('Lost connection to RabbitMQ channel')
+				);
 
 				this.initialized.next();
 			}

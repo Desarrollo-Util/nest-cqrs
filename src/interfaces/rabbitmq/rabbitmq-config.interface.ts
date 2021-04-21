@@ -29,7 +29,7 @@ export interface RabbitMQConfig {
 	/** Connection manager options */
 	connectionManagerOptions?: amqpConnectionManager.AmqpConnectionManagerOptions;
 	/** Callback to execute when connection close */
-	onConnectionClose: () => void;
+	onConnectionClose?: () => void;
 }
 
 export interface RabbitMQModuleConfig
