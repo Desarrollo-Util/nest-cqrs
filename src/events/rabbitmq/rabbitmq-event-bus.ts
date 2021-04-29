@@ -28,14 +28,14 @@ export class RabbitEventBus implements IEventBus {
 	private _initialized: boolean = false;
 	/** Domain exchange name */
 	private _domainExchange: string;
-	/** Error exchange name */
-	private _errorExchange: string;
 	/** Dead letter exchange name */
 	private _deadLetterExchange: string;
-	/** Error queue name */
-	private _errorQueue: string;
+	/** Retry exchange name */
+	private _retryExchange: string;
 	/** Dead letter queue name */
 	private _deadLetterQueue: string;
+	/** Retry queue name */
+	private _retryQueue: string;
 
 	/**
 	 * Creates a new command bus
@@ -50,14 +50,14 @@ export class RabbitEventBus implements IEventBus {
 	 * @param partialConfig Module config
 	 */
 	public async initialize(partialConfig: RabbitMQModuleConfig): Promise<void> {
-		const { prefix, deadLetterTtl } = partialConfig;
+		const { prefix, retryTtl } = partialConfig;
 
 		this.setExchangeAndQueueNames(prefix);
 
 		const rabbitConfig = this.getRabbitMQConfig(partialConfig);
 		await this.initConnection(rabbitConfig);
 
-		await this.bindDefaultQueues(deadLetterTtl);
+		await this.bindDefaultQueues(retryTtl);
 
 		this._initialized = true;
 	}
@@ -155,12 +155,12 @@ export class RabbitEventBus implements IEventBus {
 	private setExchangeAndQueueNames(prefix: string): void {
 		// Exchanges
 		this._domainExchange = `${prefix}_domain_exchange`;
-		this._errorExchange = `${prefix}_error_exchange`;
-		this._deadLetterExchange = `${prefix}_deadLetter_exchange`;
+		this._deadLetterExchange = `${prefix}_dead_letter_exchange`;
+		this._retryExchange = `${prefix}_retry_exchange`;
 
 		// Queues
-		this._errorQueue = `${prefix}_error_queue`;
-		this._deadLetterQueue = `${prefix}_deadLetter_queue`;
+		this._deadLetterQueue = `${prefix}_dead_letter_queue`;
+		this._retryQueue = `${prefix}_retry_queue`;
 	}
 
 	/**
@@ -185,12 +185,12 @@ export class RabbitEventBus implements IEventBus {
 					options: defaultExchangeOptions,
 				},
 				{
-					name: this._deadLetterExchange,
+					name: this._retryExchange,
 					type: 'fanout',
 					options: defaultExchangeOptions,
 				},
 				{
-					name: this._errorExchange,
+					name: this._deadLetterExchange,
 					type: 'fanout',
 					options: defaultExchangeOptions,
 				},
@@ -208,22 +208,22 @@ export class RabbitEventBus implements IEventBus {
 	}
 
 	/**
-	 * Creates dead letter and error exchanges and queues
-	 * @param deadLetterTtl Dead letter TTL for retries
+	 * Creates retry and dead letter exchanges and queues
+	 * @param retryTtl TTL for retries
 	 */
-	private async bindDefaultQueues(deadLetterTtl: number): Promise<void> {
+	private async bindDefaultQueues(retryTtl: number): Promise<void> {
 		await this._amqpConnection.managedChannel.addSetup(
 			async (channel: ConfirmChannel) => {
-				// Dead letter
-				await channel.assertQueue(this._deadLetterQueue, {
+				// Retry
+				await channel.assertQueue(this._retryQueue, {
 					deadLetterExchange: this._domainExchange,
-					messageTtl: deadLetterTtl,
+					messageTtl: retryTtl,
 				});
-				channel.bindQueue(this._deadLetterQueue, this._deadLetterExchange, '#');
+				channel.bindQueue(this._retryQueue, this._retryExchange, '#');
 
-				// Error
-				await channel.assertQueue(this._errorQueue);
-				channel.bindQueue(this._errorQueue, this._errorExchange, '#');
+				// Dead letter
+				await channel.assertQueue(this._deadLetterQueue);
+				channel.bindQueue(this._deadLetterQueue, this._deadLetterExchange, '#');
 			}
 		);
 	}
@@ -280,7 +280,7 @@ export class RabbitEventBus implements IEventBus {
 			routingKey: routingKeyArray,
 			queueName,
 			queueOptions: {
-				deadLetterExchange: this._deadLetterExchange,
+				deadLetterExchange: this._retryExchange,
 				deadLetterRoutingKey: retryRoutingKey,
 				durable: true,
 				autoDelete: false,

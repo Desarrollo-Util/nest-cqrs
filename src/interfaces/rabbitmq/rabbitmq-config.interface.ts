@@ -36,6 +36,6 @@ export interface RabbitMQModuleConfig
 	extends Omit<RabbitMQConfig, 'exchanges'> {
 	/** Exchange common prefix */
 	prefix: string;
-	/** Dead letter TTL*/
-	deadLetterTtl: number;
+	/** Retry TTL*/
+	retryTtl: number;
 }
