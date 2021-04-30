@@ -22,37 +22,19 @@ import {
 } from '../decorators/inject-query-bus.decorator';
 import { RabbitEventBus } from '../events/rabbitmq/rabbitmq-event-bus';
 import { ICommandBus, IEventBus, IQueryBus } from '../interfaces';
+import { CqrsModuleOptions } from '../interfaces/cqrs-module-options.interface';
 import { RabbitMQModuleConfig } from '../interfaces/rabbitmq/rabbitmq-config.interface';
 import { QueryBus } from '../queries/query-bus';
 import { ExplorerService } from '../services/explorer.service';
-
-/** Command bus provider dependency inversion */
-const commandBus: Provider = {
-	provide: DITokenCommandBus,
-	useClass: CommandBus,
-};
-
-/** Query bus provider dependency inversion */
-const queryBus: Provider = {
-	provide: DITokenQueryBus,
-	useClass: QueryBus,
-};
-
-/** Event bus provider dependency inversion */
-const eventBus: Provider = {
-	provide: DITokenEventBus,
-	useClass: RabbitEventBus,
-};
 
 /**
  * Standard CQRS module
  */
 @Global()
 @Module({
-	providers: [commandBus, queryBus, eventBus, ExplorerService],
-	exports: [commandBus, queryBus, eventBus],
+	providers: [ExplorerService],
 })
-export class CqrsModule implements OnApplicationBootstrap {
+export class CqrsModule<T = any> implements OnApplicationBootstrap {
 	/**
 	 * Dependency injection
 	 * @param explorerService Explorer service
@@ -71,10 +53,34 @@ export class CqrsModule implements OnApplicationBootstrap {
 		private readonly config: RabbitMQModuleConfig
 	) {}
 
-	static register(config: RabbitMQModuleConfig): DynamicModule {
+	static forRoot(options: CqrsModuleOptions<T>): DynamicModule {
+		/** Command bus provider dependency inversion */
+		const commandBus: Provider = {
+			provide: DITokenCommandBus,
+			useClass: CommandBus,
+		};
+
+		/** Query bus provider dependency inversion */
+		const queryBus: Provider = {
+			provide: DITokenQueryBus,
+			useClass: QueryBus,
+		};
+
+		/** Event bus provider dependency inversion */
+		const eventBus: Provider = {
+			provide: DITokenEventBus,
+			useClass: RabbitEventBus,
+		};
+
 		return {
 			module: CqrsModule,
-			providers: [{ provide: DI_TOKEN_EVENT_BUS_CONFIG, useValue: config }],
+			providers: [
+				{ provide: DI_TOKEN_EVENT_BUS_CONFIG, useValue: options.config },
+				commandBus,
+				queryBus,
+				eventBus,
+			],
+			exports: [commandBus, queryBus, eventBus],
 		};
 	}
 
