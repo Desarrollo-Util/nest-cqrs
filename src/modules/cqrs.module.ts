@@ -22,7 +22,11 @@ import {
 } from '../decorators/inject-query-bus.decorator';
 import { RabbitEventBus } from '../events/rabbitmq/rabbitmq-event-bus';
 import { ICommandBus, IEventBus, IQueryBus } from '../interfaces';
-import { CqrsModuleOptions } from '../interfaces/cqrs-module-options.interface';
+import {
+	CqrsModuleAsyncOptions,
+	CqrsModuleBusImplementations,
+	CqrsModuleOptions,
+} from '../interfaces/cqrs-module-options.interface';
 import { RabbitMQModuleConfig } from '../interfaces/rabbitmq/rabbitmq-config.interface';
 import { QueryBus } from '../queries/query-bus';
 import { ExplorerService } from '../services/explorer.service';
@@ -34,7 +38,7 @@ import { ExplorerService } from '../services/explorer.service';
 @Module({
 	providers: [ExplorerService],
 })
-export class CqrsModule<T = any> implements OnApplicationBootstrap {
+export class CqrsModule implements OnApplicationBootstrap {
 	/**
 	 * Dependency injection
 	 * @param explorerService Explorer service
@@ -53,34 +57,70 @@ export class CqrsModule<T = any> implements OnApplicationBootstrap {
 		private readonly config: RabbitMQModuleConfig
 	) {}
 
-	static forRoot(options: CqrsModuleOptions<T>): DynamicModule {
-		/** Command bus provider dependency inversion */
-		const commandBus: Provider = {
-			provide: DITokenCommandBus,
-			useClass: CommandBus,
-		};
+	/**
+	 * Gets bus providers, allowing to keep default providers or replace any of them with a custom implementation
+	 * @param implementations Custom implementations
+	 * @returns Bus providers
+	 */
+	private static createBusProviders(
+		implementations?: CqrsModuleBusImplementations
+	): Provider[] {
+		return [
+			{
+				provide: DITokenCommandBus,
+				useClass: implementations?.commandBus || CommandBus,
+			},
+			{
+				provide: DITokenQueryBus,
+				useClass: implementations?.queryBus || QueryBus,
+			},
+			{
+				provide: DITokenEventBus,
+				useClass: implementations?.eventBus || RabbitEventBus,
+			},
+		];
+	}
 
-		/** Query bus provider dependency inversion */
-		const queryBus: Provider = {
-			provide: DITokenQueryBus,
-			useClass: QueryBus,
-		};
-
-		/** Event bus provider dependency inversion */
-		const eventBus: Provider = {
-			provide: DITokenEventBus,
-			useClass: RabbitEventBus,
-		};
+	/**
+	 * Configures the module
+	 * @param options Module options
+	 * @returns Nest module
+	 */
+	static register<T = any>(options: CqrsModuleOptions<T>): DynamicModule {
+		const busProviders = this.createBusProviders(options.busImplementations);
 
 		return {
 			module: CqrsModule,
 			providers: [
 				{ provide: DI_TOKEN_EVENT_BUS_CONFIG, useValue: options.config },
-				commandBus,
-				queryBus,
-				eventBus,
+				...busProviders,
 			],
-			exports: [commandBus, queryBus, eventBus],
+			exports: busProviders,
+		};
+	}
+
+	/**
+	 * Configures the module asyncronously
+	 * @param options Async module options
+	 * @returns Nest module
+	 */
+	static registerAsync<T = any>(
+		options: CqrsModuleAsyncOptions<T>
+	): DynamicModule {
+		const busProviders = this.createBusProviders(options.busImplementations);
+
+		return {
+			module: CqrsModule,
+			imports: options.imports,
+			providers: [
+				{
+					provide: DI_TOKEN_EVENT_BUS_CONFIG,
+					useFactory: options.useFactory,
+					inject: options.inject || [],
+				},
+				...busProviders,
+			],
+			exports: busProviders,
 		};
 	}
 

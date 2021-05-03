@@ -36,6 +36,8 @@ export class RabbitEventBus implements IEventBus {
 	private _deadLetterQueue: string;
 	/** Retry queue name */
 	private _retryQueue: string;
+	/** Application prefix */
+	private _prefix: string;
 
 	/**
 	 * Creates a new command bus
@@ -153,6 +155,8 @@ export class RabbitEventBus implements IEventBus {
 	 * @param prefix Prefix
 	 */
 	private setExchangeAndQueueNames(prefix: string): void {
+		this._prefix = prefix;
+
 		// Exchanges
 		this._domainExchange = `${prefix}_domain_exchange`;
 		this._deadLetterExchange = `${prefix}_dead_letter_exchange`;
@@ -255,9 +259,9 @@ export class RabbitEventBus implements IEventBus {
 		actionName: string
 	): IRabbitMQBaseQueueOptions {
 		return {
-			queueName: `${eventPrefix}-${eventName}-${actionName}`,
+			queueName: `${this._prefix}-${eventPrefix}-${eventName}-${actionName}`,
 			routingKey: eventName,
-			retryRoutingKey: `retry-${eventPrefix}-${eventName}-${actionName}`,
+			retryRoutingKey: `retry-${this._prefix}-${eventPrefix}-${eventName}-${actionName}`,
 		};
 	}
 
