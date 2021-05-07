@@ -24,7 +24,7 @@ export interface CqrsModuleOptions<TEventBusConfig = any> {
 /** CQRS Nest async module options */
 export interface CqrsModuleAsyncOptions<TEventBusConfig = any> {
 	/** Nest imports */
-	imports: Array<
+	imports?: Array<
 		Type<any> | DynamicModule | Promise<DynamicModule> | ForwardReference
 	>;
 	/** Gets event bus config */
