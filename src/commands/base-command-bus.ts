@@ -29,7 +29,7 @@ export abstract class BaseCommandBus<CommandBase extends ICommand = ICommand>
 	 * @param command Command
 	 * @returns Command result
 	 */
-	abstract execute(command: CommandBase): Promise<any>;
+	abstract execute(command: CommandBase): any;
 
 	/**
 	 * Bind a handler to command bus

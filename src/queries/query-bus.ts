@@ -21,7 +21,7 @@ export class QueryBus<
 	 * @param query Query
 	 * @returns Query result
 	 */
-	execute(query: QueryBase): Promise<any> {
+	execute(query: QueryBase): any {
 		const queryHandler = this.getQueryHandler(query);
 
 		return queryHandler.execute(query);

@@ -36,7 +36,7 @@ export class ObservableQueryBus<
 	 * @param query Query
 	 * @returns Query result
 	 */
-	execute(query: QueryBase): Promise<any> {
+	execute(query: QueryBase): any {
 		const queryHandler = this.getQueryHandler(query);
 
 		this._publisher$.next(query);

@@ -36,7 +36,7 @@ export class ObservableCommandBus<
 	 * @param command Command
 	 * @returns Command result
 	 */
-	execute(command: CommandBase): Promise<any> {
+	execute(command: CommandBase): any {
 		const commandHandler = this.getCommandHandler(command);
 
 		this._publisher$.next(command);

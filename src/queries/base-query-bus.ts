@@ -29,7 +29,7 @@ export abstract class BaseQueryBus<QueryBase extends IQuery = IQuery>
 	 * @param query Query
 	 * @returns Query result
 	 */
-	abstract execute(query: QueryBase): Promise<any>;
+	abstract execute(query: QueryBase): any;
 
 	/**
 	 * Bind a handler to query bus
