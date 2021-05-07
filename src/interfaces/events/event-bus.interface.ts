@@ -29,4 +29,8 @@ export interface IEventBus {
 	 * @param events Events
 	 */
 	publishAll(events: IEvent[]): Promise<void>;
+	/**
+	 * Closes connection to event bus
+	 */
+	closeConnection(): Promise<void> | void;
 }

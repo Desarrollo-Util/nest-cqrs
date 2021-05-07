@@ -17,13 +17,13 @@ export interface RabbitMQConfig {
 	/** RabbitMQ connection URI */
 	uri: string | string[];
 	/** Maximum number of messages that can be processed simultaneously without receiving ACK */
-	prefetchCount: number;
+	prefetchCount?: number;
 	/** RabbitMQ exchanges config */
 	exchanges: RabbitMQExchangeConfig[];
 	/** Default exchange type */
-	defaultExchangeType: 'direct' | 'topic' | 'fanout';
+	defaultExchangeType?: 'direct' | 'topic' | 'fanout';
 	/** How to handle errors by default */
-	defaultSubscribeErrorBehavior: RabbitMQErrorHandlerTypes;
+	defaultSubscribeErrorBehavior?: RabbitMQErrorHandlerTypes;
 	/** Connection initialization config */
 	connectionInitOptions: ConnectionInitOptions;
 	/** Connection manager options */

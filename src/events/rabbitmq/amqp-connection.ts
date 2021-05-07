@@ -17,7 +17,7 @@ export interface CorrelationMessage {
 }
 
 const defaultConfig: Omit<RabbitMQConfig, 'uri'> = {
-	prefetchCount: 10,
+	prefetchCount: 5,
 	defaultExchangeType: 'topic',
 	defaultSubscribeErrorBehavior: RabbitMQErrorHandlerTypes.REJECT,
 	exchanges: [],

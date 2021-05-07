@@ -74,7 +74,10 @@ export class RabbitEventBus implements IEventBus {
 
 		const instance = this.moduleRef.get(eventHandler, { strict: false });
 		if (!instance) {
-			Logger.warn(`Not found instance for ${eventHandler.name}`);
+			Logger.warn(
+				`Not found instance for ${eventHandler.name}`,
+				RabbitEventBus.name
+			);
 			return;
 		}
 
@@ -139,6 +142,13 @@ export class RabbitEventBus implements IEventBus {
 		for (const event of events) {
 			await this.publish(event);
 		}
+	}
+
+	/**
+	 * Closes managed connection to RabbitMQ
+	 */
+	public async closeConnection(): Promise<void> {
+		if (this._initialized) await this._amqpConnection.managedConnection.close();
 	}
 
 	//#endregion

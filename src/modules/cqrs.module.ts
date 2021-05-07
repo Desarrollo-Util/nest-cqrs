@@ -2,8 +2,10 @@ import {
 	DynamicModule,
 	Global,
 	Inject,
+	Logger,
 	Module,
 	OnApplicationBootstrap,
+	OnModuleDestroy,
 	Provider,
 } from '@nestjs/common';
 import { CommandBus } from '../commands/command-bus';
@@ -38,7 +40,7 @@ import { ExplorerService } from '../services/explorer.service';
 @Module({
 	providers: [ExplorerService],
 })
-export class CqrsModule implements OnApplicationBootstrap {
+export class CqrsModule implements OnApplicationBootstrap, OnModuleDestroy {
 	/**
 	 * Dependency injection
 	 * @param explorerService Explorer service
@@ -134,5 +136,14 @@ export class CqrsModule implements OnApplicationBootstrap {
 		this.queryBus.register(queries);
 		await this.eventBus.initialize(this.config);
 		this.eventBus.registerMany(events);
+	}
+
+	/**
+	 * Closes event bus connection on module destroy
+	 */
+	async onModuleDestroy() {
+		Logger.verbose('Closing event bus connection', CqrsModule.name);
+		await this.eventBus.closeConnection();
+		Logger.verbose('Event bus connection closed', CqrsModule.name);
 	}
 }
