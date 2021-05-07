@@ -10,5 +10,5 @@ export interface ICommandHandler<
 	 * @param command Command
 	 * @returns Command result
 	 */
-	execute(command: TCommand): Promise<TResult>;
+	execute(command: TCommand): TResult | Promise<TResult>;
 }

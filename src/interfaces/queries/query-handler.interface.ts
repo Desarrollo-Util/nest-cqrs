@@ -7,5 +7,5 @@ export interface IQueryHandler<TQuery extends IQuery = IQuery, TResult = any> {
 	 * @param query Query
 	 * @returns Query result
 	 */
-	execute(query: TQuery): Promise<TResult>;
+	execute(query: TQuery): TResult | Promise<TResult>;
 }
