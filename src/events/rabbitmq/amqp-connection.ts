@@ -3,7 +3,6 @@ import amqpcon from 'amqp-connection-manager';
 import amqplib from 'amqplib';
 import { EMPTY, Subject, throwError } from 'rxjs';
 import { catchError, take, timeoutWith } from 'rxjs/operators';
-import { RabbitMQErrorHandlerTypes } from '../../constants/rabbitmq/rabbitmq-error-handler-types.enum';
 import { IEvent } from '../../interfaces/events/event.interface';
 import {
 	ConnectionInitOptions,
@@ -19,7 +18,6 @@ export interface CorrelationMessage {
 const defaultConfig: Omit<RabbitMQConfig, 'uri'> = {
 	prefetchCount: 5,
 	defaultExchangeType: 'topic',
-	defaultSubscribeErrorBehavior: RabbitMQErrorHandlerTypes.REJECT,
 	exchanges: [],
 	connectionInitOptions: {
 		wait: true,
@@ -27,6 +25,9 @@ const defaultConfig: Omit<RabbitMQConfig, 'uri'> = {
 		reject: true,
 	},
 	connectionManagerOptions: {},
+	errorHandler: (channel: amqplib.Channel, msg: amqplib.ConsumeMessage) => {
+		channel.reject(msg, false);
+	},
 };
 
 export class AmqpConnection {
@@ -211,35 +212,10 @@ export class AmqpConnection {
 
 				channel.ack(msg);
 			} catch (e) {
-				console.log('ERROR', e);
-				this.errorHandler(
-					msgOptions.errorHandler || this.config.defaultSubscribeErrorBehavior,
-					channel,
-					msg
-				);
+				if (msgOptions.errorHandler) msgOptions.errorHandler(channel, msg, e);
+				else this.config.errorHandler(channel, msg, e);
 			}
 		});
-	}
-
-	private errorHandler(
-		handlerType: RabbitMQErrorHandlerTypes,
-		channel: amqplib.Channel,
-		msg: amqplib.ConsumeMessage
-	): void {
-		switch (handlerType) {
-			case RabbitMQErrorHandlerTypes.ACK:
-				channel.ack(msg);
-				return;
-			case RabbitMQErrorHandlerTypes.NACK:
-				channel.nack(msg, false, false);
-				return;
-			case RabbitMQErrorHandlerTypes.REQUEUE:
-				channel.nack(msg, false, true);
-				return;
-			default:
-				channel.reject(msg, false);
-				return;
-		}
 	}
 
 	/**
