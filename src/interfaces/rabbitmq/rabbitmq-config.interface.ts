@@ -37,9 +37,11 @@ export interface RabbitMQConfig {
 }
 
 export interface RabbitMQModuleConfig
-	extends Omit<RabbitMQConfig, 'exchanges'> {
+	extends Omit<RabbitMQConfig, 'exchanges' | 'errorHandler'> {
 	/** Exchange common prefix */
 	prefix: string;
 	/** Retry TTL*/
 	retryTtl: number;
+	/** Max retries */
+	maxRetries: number;
 }

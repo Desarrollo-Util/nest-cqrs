@@ -1,5 +1,6 @@
 import { Injectable, Logger, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import type amqplib from 'amqplib';
 import { ConfirmChannel, Options } from 'amqplib';
 import { EVENTS_HANDLER_METADATA } from '../../constants/reflect-keys.constants';
 import { InjectEventBusConfig } from '../../decorators/inject-event-bus-config.decorator';
@@ -193,6 +194,7 @@ export class RabbitEventBus implements IEventBus {
 
 		return {
 			...this.config,
+			errorHandler: this.errorHandler.bind(this),
 			exchanges: [
 				{
 					name: this._domainExchange,
@@ -301,5 +303,29 @@ export class RabbitEventBus implements IEventBus {
 				autoDelete: false,
 			},
 		};
+	}
+
+	private errorHandler(
+		channel: amqplib.Channel,
+		msg: amqplib.ConsumeMessage
+	): void {
+		const retries = Number(
+			(msg.properties.headers['x-death'] &&
+				msg.properties.headers['x-death'].find(
+					item => item.exchange === this._domainExchange
+				)?.count) ||
+				0
+		);
+
+		if (retries >= this.config.maxRetries) {
+			channel.publish(
+				this._deadLetterExchange,
+				msg.fields.routingKey,
+				msg.content
+			);
+			return channel.ack(msg);
+		} else {
+			return channel.reject(msg, false);
+		}
 	}
 }
