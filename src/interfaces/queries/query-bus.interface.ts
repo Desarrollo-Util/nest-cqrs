@@ -12,7 +12,7 @@ export interface IQueryBus<T extends IQuery = IQuery> {
 	 * @param query Query
 	 * @returns Query result
 	 */
-	execute(query: T): Promise<any>;
+	execute(query: T): any;
 
 	/**
 	 * Bind a handler to query bus

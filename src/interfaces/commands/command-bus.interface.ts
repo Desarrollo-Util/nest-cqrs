@@ -12,7 +12,7 @@ export interface ICommandBus<T extends ICommand = ICommand> {
 	 * @param command Command
 	 * @returns Command result
 	 */
-	execute(command: T): Promise<any>;
+	execute(command: T): any;
 
 	/**
 	 * Bind a handler to command bus
