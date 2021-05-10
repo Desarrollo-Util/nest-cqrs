@@ -1,5 +1,5 @@
-import amqpConnectionManager from 'amqp-connection-manager';
-import { RabbitMQErrorHandlerTypes } from '../../constants/rabbitmq/rabbitmq-error-handler-types.enum';
+import type amqpConnectionManager from 'amqp-connection-manager';
+import type amqplib from 'amqplib';
 import { RabbitMQExchangeConfig } from './rabbitmq-exchange-config.interface';
 
 /** Initialize connection options */
@@ -22,14 +22,18 @@ export interface RabbitMQConfig {
 	exchanges: RabbitMQExchangeConfig[];
 	/** Default exchange type */
 	defaultExchangeType?: 'direct' | 'topic' | 'fanout';
-	/** How to handle errors by default */
-	defaultSubscribeErrorBehavior?: RabbitMQErrorHandlerTypes;
 	/** Connection initialization config */
 	connectionInitOptions: ConnectionInitOptions;
 	/** Connection manager options */
 	connectionManagerOptions?: amqpConnectionManager.AmqpConnectionManagerOptions;
 	/** Callback to execute when connection close */
 	onConnectionClose?: () => void;
+	/** Error handler */
+	errorHandler: (
+		channel: amqplib.Channel,
+		msg: amqplib.ConsumeMessage,
+		error?: Error
+	) => void;
 }
 
 export interface RabbitMQModuleConfig

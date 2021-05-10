@@ -1,1 +1,0 @@
-export const DI_TOKEN_EVENT_BUS_CONFIG = Symbol('DI_TOKEN_EVENT_BUS_CONFIG');

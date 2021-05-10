@@ -1,7 +1,5 @@
 import {
 	DynamicModule,
-	Global,
-	Inject,
 	Logger,
 	Module,
 	OnApplicationBootstrap,
@@ -9,11 +7,11 @@ import {
 	Provider,
 } from '@nestjs/common';
 import { CommandBus } from '../commands/command-bus';
-import { DI_TOKEN_EVENT_BUS_CONFIG } from '../constants/di-tokens.constants';
 import {
 	DITokenCommandBus,
 	InjectCommandBus,
 } from '../decorators/inject-command-bus.decorator';
+import { DITokenEventBusConfig } from '../decorators/inject-event-bus-config.decorator';
 import {
 	DITokenEventBus,
 	InjectEventBus,
@@ -29,14 +27,12 @@ import {
 	CqrsModuleBusImplementations,
 	CqrsModuleOptions,
 } from '../interfaces/cqrs-module-options.interface';
-import { RabbitMQModuleConfig } from '../interfaces/rabbitmq/rabbitmq-config.interface';
 import { QueryBus } from '../queries/query-bus';
 import { ExplorerService } from '../services/explorer.service';
 
 /**
  * Standard CQRS module
  */
-@Global()
 @Module({
 	providers: [ExplorerService],
 })
@@ -54,9 +50,7 @@ export class CqrsModule implements OnApplicationBootstrap, OnModuleDestroy {
 		@InjectQueryBus()
 		private readonly queryBus: IQueryBus,
 		@InjectEventBus()
-		private readonly eventBus: IEventBus,
-		@Inject(DI_TOKEN_EVENT_BUS_CONFIG)
-		private readonly config: RabbitMQModuleConfig
+		private readonly eventBus: IEventBus
 	) {}
 
 	/**
@@ -94,10 +88,11 @@ export class CqrsModule implements OnApplicationBootstrap, OnModuleDestroy {
 		return {
 			module: CqrsModule,
 			providers: [
-				{ provide: DI_TOKEN_EVENT_BUS_CONFIG, useValue: options.config },
+				{ provide: DITokenEventBusConfig, useValue: options.config },
 				...busProviders,
 			],
 			exports: busProviders,
+			global: true,
 		};
 	}
 
@@ -116,13 +111,14 @@ export class CqrsModule implements OnApplicationBootstrap, OnModuleDestroy {
 			imports: options.imports,
 			providers: [
 				{
-					provide: DI_TOKEN_EVENT_BUS_CONFIG,
+					provide: DITokenEventBusConfig,
 					useFactory: options.useFactory,
 					inject: options.inject || [],
 				},
 				...busProviders,
 			],
 			exports: busProviders,
+			global: true,
 		};
 	}
 
@@ -134,7 +130,7 @@ export class CqrsModule implements OnApplicationBootstrap, OnModuleDestroy {
 
 		this.commandBus.register(commands);
 		this.queryBus.register(queries);
-		await this.eventBus.initialize(this.config);
+		await this.eventBus.initialize();
 		this.eventBus.registerMany(events);
 	}
 
