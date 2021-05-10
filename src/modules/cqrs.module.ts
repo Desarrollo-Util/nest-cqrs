@@ -1,7 +1,5 @@
 import {
 	DynamicModule,
-	Global,
-	Inject,
 	Logger,
 	Module,
 	OnApplicationBootstrap,
@@ -9,11 +7,14 @@ import {
 	Provider,
 } from '@nestjs/common';
 import { CommandBus } from '../commands/command-bus';
-import { DI_TOKEN_EVENT_BUS_CONFIG } from '../constants/di-tokens.constants';
 import {
 	DITokenCommandBus,
 	InjectCommandBus,
 } from '../decorators/inject-command-bus.decorator';
+import {
+	DITokenEventBusConfig,
+	InjectEventBusConfig,
+} from '../decorators/inject-event-bus-config.decorator';
 import {
 	DITokenEventBus,
 	InjectEventBus,
@@ -36,7 +37,6 @@ import { ExplorerService } from '../services/explorer.service';
 /**
  * Standard CQRS module
  */
-@Global()
 @Module({
 	providers: [ExplorerService],
 })
@@ -55,7 +55,7 @@ export class CqrsModule implements OnApplicationBootstrap, OnModuleDestroy {
 		private readonly queryBus: IQueryBus,
 		@InjectEventBus()
 		private readonly eventBus: IEventBus,
-		@Inject(DI_TOKEN_EVENT_BUS_CONFIG)
+		@InjectEventBusConfig()
 		private readonly config: RabbitMQModuleConfig
 	) {}
 
@@ -94,10 +94,11 @@ export class CqrsModule implements OnApplicationBootstrap, OnModuleDestroy {
 		return {
 			module: CqrsModule,
 			providers: [
-				{ provide: DI_TOKEN_EVENT_BUS_CONFIG, useValue: options.config },
+				{ provide: DITokenEventBusConfig, useValue: options.config },
 				...busProviders,
 			],
 			exports: busProviders,
+			global: true,
 		};
 	}
 
@@ -116,13 +117,14 @@ export class CqrsModule implements OnApplicationBootstrap, OnModuleDestroy {
 			imports: options.imports,
 			providers: [
 				{
-					provide: DI_TOKEN_EVENT_BUS_CONFIG,
+					provide: DITokenEventBusConfig,
 					useFactory: options.useFactory,
 					inject: options.inject || [],
 				},
 				...busProviders,
 			],
 			exports: busProviders,
+			global: true,
 		};
 	}
 
