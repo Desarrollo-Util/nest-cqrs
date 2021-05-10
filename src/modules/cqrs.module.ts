@@ -11,10 +11,7 @@ import {
 	DITokenCommandBus,
 	InjectCommandBus,
 } from '../decorators/inject-command-bus.decorator';
-import {
-	DITokenEventBusConfig,
-	InjectEventBusConfig,
-} from '../decorators/inject-event-bus-config.decorator';
+import { DITokenEventBusConfig } from '../decorators/inject-event-bus-config.decorator';
 import {
 	DITokenEventBus,
 	InjectEventBus,
@@ -30,7 +27,6 @@ import {
 	CqrsModuleBusImplementations,
 	CqrsModuleOptions,
 } from '../interfaces/cqrs-module-options.interface';
-import { RabbitMQModuleConfig } from '../interfaces/rabbitmq/rabbitmq-config.interface';
 import { QueryBus } from '../queries/query-bus';
 import { ExplorerService } from '../services/explorer.service';
 
@@ -54,9 +50,7 @@ export class CqrsModule implements OnApplicationBootstrap, OnModuleDestroy {
 		@InjectQueryBus()
 		private readonly queryBus: IQueryBus,
 		@InjectEventBus()
-		private readonly eventBus: IEventBus,
-		@InjectEventBusConfig()
-		private readonly config: RabbitMQModuleConfig
+		private readonly eventBus: IEventBus
 	) {}
 
 	/**
@@ -136,7 +130,7 @@ export class CqrsModule implements OnApplicationBootstrap, OnModuleDestroy {
 
 		this.commandBus.register(commands);
 		this.queryBus.register(queries);
-		await this.eventBus.initialize(this.config);
+		await this.eventBus.initialize();
 		this.eventBus.registerMany(events);
 	}
 

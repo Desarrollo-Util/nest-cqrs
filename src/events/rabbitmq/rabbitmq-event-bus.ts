@@ -2,6 +2,7 @@ import { Injectable, Logger, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { ConfirmChannel, Options } from 'amqplib';
 import { EVENTS_HANDLER_METADATA } from '../../constants/reflect-keys.constants';
+import { InjectEventBusConfig } from '../../decorators/inject-event-bus-config.decorator';
 import { EventBusNotInitializedException } from '../../exceptions/events/event-bus-not-initialized.exception';
 import { UnregisteredEventHandlerMetadataException } from '../../exceptions/events/unregistered-event-handler-metadata.exception';
 import { WrongEventHandlerMetadataException } from '../../exceptions/events/wrong-event-handler-metadata.exception';
@@ -43,20 +44,23 @@ export class RabbitEventBus implements IEventBus {
 	 * Creates a new command bus
 	 * @param moduleRef Nest module providers
 	 */
-	constructor(private readonly moduleRef: ModuleRef) {}
+	constructor(
+		private readonly moduleRef: ModuleRef,
+		@InjectEventBusConfig()
+		private readonly config: RabbitMQModuleConfig
+	) {}
 
 	//#region Public methods
 
 	/**
 	 * Initialices RabbitMQ connection, setups exchanges, dead letter queue and error queue
-	 * @param partialConfig Module config
 	 */
-	public async initialize(partialConfig: RabbitMQModuleConfig): Promise<void> {
-		const { prefix, retryTtl } = partialConfig;
+	public async initialize(): Promise<void> {
+		const { prefix, retryTtl } = this.config;
 
 		this.setExchangeAndQueueNames(prefix);
 
-		const rabbitConfig = this.getRabbitMQConfig(partialConfig);
+		const rabbitConfig = this.getRabbitMQConfig();
 		await this.initConnection(rabbitConfig);
 
 		await this.bindDefaultQueues(retryTtl);
@@ -179,19 +183,16 @@ export class RabbitEventBus implements IEventBus {
 
 	/**
 	 * Gets a full RabbitMQ config from a partial module config
-	 * @param partialConfig Partial module config
 	 * @returns Full RabbitMQ config
 	 */
-	private getRabbitMQConfig(
-		partialConfig: RabbitMQModuleConfig
-	): RabbitMQConfig {
+	private getRabbitMQConfig(): RabbitMQConfig {
 		const defaultExchangeOptions: Options.AssertExchange = {
 			durable: true,
 			autoDelete: false,
 		};
 
 		return {
-			...partialConfig,
+			...this.config,
 			exchanges: [
 				{
 					name: this._domainExchange,
