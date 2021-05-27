@@ -1,7 +1,9 @@
 import { Injectable, Logger, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
+import { ExternalContextCreator } from '@nestjs/core/helpers/external-context-creator';
 import type amqplib from 'amqplib';
 import { ConfirmChannel, Options } from 'amqplib';
+import { AMQP_CONTEXT_TYPE, EVENT_HANDLER_METHOD_NAME } from '../../constants';
 import { EVENTS_HANDLER_METADATA } from '../../constants/reflect-keys.constants';
 import { InjectEventBusConfig } from '../../decorators/inject-event-bus-config.decorator';
 import { EventBusNotInitializedException } from '../../exceptions/events/event-bus-not-initialized.exception';
@@ -48,7 +50,8 @@ export class RabbitEventBus implements IEventBus {
 	constructor(
 		private readonly moduleRef: ModuleRef,
 		@InjectEventBusConfig()
-		private readonly config: RabbitMQModuleConfig
+		private readonly config: RabbitMQModuleConfig,
+		private readonly externalContextCreator: ExternalContextCreator
 	) {}
 
 	//#region Public methods
@@ -106,10 +109,19 @@ export class RabbitEventBus implements IEventBus {
 			retryRoutingKey
 		);
 
-		await this._amqpConnection.createSubscriber(
-			instance.handle.bind(instance),
-			messageOptions
+		const handler = this.externalContextCreator.create(
+			instance,
+			instance.handle,
+			EVENT_HANDLER_METHOD_NAME,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			undefined,
+			AMQP_CONTEXT_TYPE
 		);
+
+		await this._amqpConnection.createSubscriber(handler, messageOptions);
 	}
 
 	/**
