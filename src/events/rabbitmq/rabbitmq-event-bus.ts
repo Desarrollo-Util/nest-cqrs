@@ -3,7 +3,7 @@ import { ModuleRef } from '@nestjs/core';
 import { ExternalContextCreator } from '@nestjs/core/helpers/external-context-creator';
 import type amqplib from 'amqplib';
 import { ConfirmChannel, Options } from 'amqplib';
-import { AMQP_CONTEXT_TYPE, EVENT_HANDLER_METHOD_NAME } from '../../constants';
+import { ContextTypes, EVENT_HANDLER_METHOD_NAME } from '../../constants';
 import { EVENTS_HANDLER_METADATA } from '../../constants/reflect-keys.constants';
 import { InjectEventBusConfig } from '../../decorators/inject-event-bus-config.decorator';
 import { EventBusNotInitializedException } from '../../exceptions/events/event-bus-not-initialized.exception';
@@ -16,7 +16,7 @@ import { IEvent } from '../../interfaces/events/event.interface';
 import { IRabbitMQBaseQueueOptions } from '../../interfaces/rabbitmq/rabbitmq-base-queue-options.interface';
 import {
 	RabbitMQConfig,
-	RabbitMQModuleConfig,
+	RabbitMQModuleConfig
 } from '../../interfaces/rabbitmq/rabbitmq-config.interface';
 import { IRabbitMQMessageOptions } from '../../interfaces/rabbitmq/rabbitmq-message-options.interface';
 import { AmqpConnection } from './amqp-connection';
@@ -118,7 +118,7 @@ export class RabbitEventBus implements IEventBus {
 			undefined,
 			undefined,
 			undefined,
-			AMQP_CONTEXT_TYPE
+			ContextTypes.AMQP
 		);
 
 		await this._amqpConnection.createSubscriber(handler, messageOptions);

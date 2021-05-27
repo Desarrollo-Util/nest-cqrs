@@ -1,5 +1,5 @@
-/** Types of caught exceptions */
-export enum ExceptionTypes {
+/** Request context types */
+export enum ContextTypes {
 	/** From GraphQL requests */
 	GRAPHQL = 'graphql',
 	/** From REST requests */
