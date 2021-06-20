@@ -147,7 +147,10 @@ export class RabbitEventBus implements IEventBus {
 		await this._amqpConnection.publish(
 			this._domainExchange,
 			event.constructor.name,
-			{ ...event }
+			{ ...event },
+			{
+				persistent: true,
+			}
 		);
 	}
 
