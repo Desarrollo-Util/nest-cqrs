@@ -1,3 +1,4 @@
+import { EventPublishSort } from '../../constants';
 import { InjectAsyncEventBus } from '../../decorators';
 import { InjectSyncEventBus } from '../../decorators/inject-sync-event-bus.decorator';
 import { IAsyncEventBus, ISyncEventBus } from '../../interfaces';
@@ -37,8 +38,21 @@ export class EventPublisher implements IEventPublisher {
 	 * Publish many events into corresponding event bus
 	 * @param events Events
 	 */
-	async publishAll(events: Array<SyncEvent | AsyncEvent>): Promise<void> {
-		const publishPromises = events.map(event => this.publish(event));
+	async publishAll(
+		events: Array<SyncEvent | AsyncEvent>,
+		sort: EventPublishSort = EventPublishSort.FIRST_SYNC
+	): Promise<void> {
+		let sortedEvents = events;
+
+		const syncEvents = events.filter(event => event instanceof SyncEvent);
+		const asyncEvents = events.filter(event => event instanceof AsyncEvent);
+
+		if (sort === EventPublishSort.FIRST_SYNC)
+			sortedEvents = [...syncEvents, ...asyncEvents];
+		else if (sort === EventPublishSort.FIRST_ASYNC)
+			sortedEvents = [...asyncEvents, ...syncEvents];
+
+		const publishPromises = sortedEvents.map(event => this.publish(event));
 
 		await Promise.all(publishPromises);
 	}
