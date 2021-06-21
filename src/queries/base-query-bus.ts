@@ -8,7 +8,7 @@ import { IQueryHandler } from '../interfaces/queries/query-handler.interface';
 import { IQuery } from '../interfaces/queries/query.interface';
 
 /** Query handler class */
-type QueryHandlerType = Type<IQueryHandler<IQuery>>;
+type QueryHandlerType = Type<IQueryHandler>;
 
 /**
  *	Base query bus
@@ -29,22 +29,13 @@ export abstract class BaseQueryBus<QueryBase extends IQuery = IQuery>
 	 * @param query Query
 	 * @returns Query result
 	 */
-	abstract execute(query: QueryBase): any;
-
-	/**
-	 * Bind a handler to query bus
-	 * @param queryHandler Query handler
-	 * @param queryName Query name
-	 */
-	bind(queryHandler: IQueryHandler<QueryBase>, queryName: string): void {
-		this._handlers.set(queryName, queryHandler);
-	}
+	public abstract execute(query: QueryBase): any;
 
 	/**
 	 * Binds an array of handlers
 	 * @param handlers Handlers
 	 */
-	register(handlers: QueryHandlerType[] = []): void {
+	public register(handlers: QueryHandlerType[] = []): void {
 		handlers.forEach(handler => this.registerHandler(handler));
 	}
 
@@ -86,6 +77,18 @@ export abstract class BaseQueryBus<QueryBase extends IQuery = IQuery>
 		if (!queryHandler) throw new QueryHandlerNotFoundException(queryName);
 
 		return queryHandler;
+	}
+
+	/**
+	 * Bind a handler to query bus
+	 * @param queryHandler Query handler
+	 * @param queryName Query name
+	 */
+	private bind(
+		queryHandler: IQueryHandler<QueryBase>,
+		queryName: string
+	): void {
+		this._handlers.set(queryName, queryHandler);
 	}
 
 	/**

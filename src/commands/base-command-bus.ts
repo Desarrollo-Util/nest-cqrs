@@ -8,7 +8,7 @@ import { ICommandHandler } from '../interfaces/commands/command-handler.interfac
 import { ICommand } from '../interfaces/commands/command.interface';
 
 /** Command handler class */
-type CommandHandlerType = Type<ICommandHandler<ICommand>>;
+type CommandHandlerType = Type<ICommandHandler>;
 
 /**
  *	Base command bus
@@ -29,25 +29,13 @@ export abstract class BaseCommandBus<CommandBase extends ICommand = ICommand>
 	 * @param command Command
 	 * @returns Command result
 	 */
-	abstract execute(command: CommandBase): any;
-
-	/**
-	 * Bind a handler to command bus
-	 * @param commandHandler Command handler
-	 * @param commandName Command name
-	 */
-	bind(
-		commandHandler: ICommandHandler<CommandBase>,
-		commandName: string
-	): void {
-		this._handlers.set(commandName, commandHandler);
-	}
+	public abstract execute(command: CommandBase): any;
 
 	/**
 	 * Binds an array of handlers
 	 * @param handlers Handlers
 	 */
-	register(handlers: CommandHandlerType[] = []): void {
+	public register(handlers: CommandHandlerType[] = []): void {
 		handlers.forEach(handler => this.registerHandler(handler));
 	}
 
@@ -90,6 +78,18 @@ export abstract class BaseCommandBus<CommandBase extends ICommand = ICommand>
 		if (!commandHandler) throw new CommandHandlerNotFoundException(commandName);
 
 		return commandHandler;
+	}
+
+	/**
+	 * Bind a handler to command bus
+	 * @param commandHandler Command handler
+	 * @param commandName Command name
+	 */
+	private bind(
+		commandHandler: ICommandHandler<CommandBase>,
+		commandName: string
+	): void {
+		this._handlers.set(commandName, commandHandler);
 	}
 
 	/**
