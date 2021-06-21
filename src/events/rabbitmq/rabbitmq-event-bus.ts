@@ -9,23 +9,23 @@ import { InjectEventBusConfig } from '../../decorators/inject-event-bus-config.d
 import { EventBusNotInitializedException } from '../../exceptions/events/event-bus-not-initialized.exception';
 import { UnregisteredEventHandlerMetadataException } from '../../exceptions/events/unregistered-event-handler-metadata.exception';
 import { WrongEventHandlerMetadataException } from '../../exceptions/events/wrong-event-handler-metadata.exception';
-import { IEventBus } from '../../interfaces/events/event-bus.interface';
+import { IAsyncEventBus } from '../../interfaces';
 import { IEventHandler } from '../../interfaces/events/event-handler.interface';
 import { IEventMetadata } from '../../interfaces/events/event-metadata.interface';
-import { IEvent } from '../../interfaces/events/event.interface';
 import { IRabbitMQBaseQueueOptions } from '../../interfaces/rabbitmq/rabbitmq-base-queue-options.interface';
 import {
 	RabbitMQConfig,
-	RabbitMQModuleConfig
+	RabbitMQModuleConfig,
 } from '../../interfaces/rabbitmq/rabbitmq-config.interface';
 import { IRabbitMQMessageOptions } from '../../interfaces/rabbitmq/rabbitmq-message-options.interface';
+import { AsyncEvent } from '../async-event';
 import { AmqpConnection } from './amqp-connection';
 
 /**
  * Rabbit MQ event bus implementation
  */
 @Injectable()
-export class RabbitEventBus implements IEventBus {
+export class RabbitEventBus implements IAsyncEventBus {
 	/** AMQP connection to RabbitMQ */
 	private _amqpConnection: AmqpConnection;
 	/** Is connection initialized */
@@ -131,16 +131,18 @@ export class RabbitEventBus implements IEventBus {
 	public async registerMany(
 		eventHandlers: Type<IEventHandler>[]
 	): Promise<void> {
-		for (const eventHandler of eventHandlers) {
-			await this.register(eventHandler);
-		}
+		const registerPromises = eventHandlers.map(eventHandler =>
+			this.register(eventHandler)
+		);
+
+		await Promise.all(registerPromises);
 	}
 
 	/**
 	 * Publishes an event to RabbitMQ
 	 * @param event Event
 	 */
-	public async publish(event: IEvent): Promise<void> {
+	public async publish(event: AsyncEvent): Promise<void> {
 		if (!this.isConnectionInitialized)
 			throw new EventBusNotInitializedException();
 
@@ -158,10 +160,10 @@ export class RabbitEventBus implements IEventBus {
 	 * Publishes an array of events to RabbitMQ
 	 * @param events Event array
 	 */
-	public async publishAll(events: IEvent[]): Promise<void> {
-		for (const event of events) {
-			await this.publish(event);
-		}
+	public async publishAll(events: AsyncEvent[]): Promise<void> {
+		const publishPromises = events.map(event => this.publish(event));
+
+		await Promise.all(publishPromises);
 	}
 
 	/**

@@ -1,6 +1,8 @@
 import { DynamicModule, ForwardReference, Type } from '@nestjs/common';
 import { ICommandBus } from './commands/command-bus.interface';
-import { IEventBus } from './events/event-bus.interface';
+import { IAsyncEventBus } from './events/async-event-bus.interface';
+import { IEventPublisher } from './events/event-publisher.interface';
+import { ISyncEventBus } from './events/sync-event-bus.interface';
 import { IQueryBus } from './queries/query-bus.interface';
 
 /** CQRS buses implementation */
@@ -9,8 +11,12 @@ export interface CqrsModuleBusImplementations {
 	commandBus?: Type<ICommandBus>;
 	/** Query bus implementation class */
 	queryBus?: Type<IQueryBus>;
-	/** Event bus implementation class */
-	eventBus?: Type<IEventBus>;
+	/** Sync event bus implementation class */
+	syncEventBus?: Type<ISyncEventBus>;
+	/** Async event bus implementation class */
+	asyncEventBus?: Type<IAsyncEventBus>;
+	/** Event publisher implementation class */
+	eventPublisher?: Type<IEventPublisher>;
 }
 
 /** CQRS Nest module options */

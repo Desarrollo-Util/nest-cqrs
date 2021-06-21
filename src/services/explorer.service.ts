@@ -10,6 +10,7 @@ import {
 import { ICommandHandler } from '../interfaces/commands/command-handler.interface';
 import { CqrsOptions } from '../interfaces/cqrs-options.interface';
 import { IEventHandler } from '../interfaces/events/event-handler.interface';
+import { EventType } from '../interfaces/events/event-metadata.interface';
 import { IQueryHandler } from '../interfaces/queries/query-handler.interface';
 
 /**
@@ -38,11 +39,28 @@ export class ExplorerService {
 			this.filterProvider<IQueryHandler>(instance, QUERY_HANDLER_METADATA)
 		);
 
-		const events = this.flatMap<IEventHandler>(modules, instance =>
-			this.filterProvider<IEventHandler>(instance, EVENTS_HANDLER_METADATA)
+		const syncEvents = this.flatMap<IEventHandler>(modules, instance =>
+			this.filterEventProvider<IEventHandler>(
+				instance,
+				EVENTS_HANDLER_METADATA,
+				EventType.SYNC
+			)
 		);
 
-		return { commands, queries, events };
+		const asyncEvents = this.flatMap<IEventHandler>(modules, instance =>
+			this.filterEventProvider<IEventHandler>(
+				instance,
+				EVENTS_HANDLER_METADATA,
+				EventType.ASYNC
+			)
+		);
+
+		return {
+			commandHandlers: commands,
+			queryHandlers: queries,
+			syncEventHandlers: syncEvents,
+			asyncEventHandlers: asyncEvents,
+		};
 	}
 
 	/**
@@ -76,5 +94,30 @@ export class ExplorerService {
 
 		const metadata = Reflect.getMetadata(metadataKey, instance.constructor);
 		return metadata ? (instance.constructor as Type<any>) : undefined;
+	}
+
+	/**
+	 * Filters event providers whose metadata key contains a class, and its event type is equals to
+	 * given event type
+	 * @param wrapper Nest dependency injection instance wrapper
+	 * @param metadataKey Metadata key
+	 * @param eventType Event type
+	 * @returns Class or undefined
+	 */
+	private filterEventProvider<TEvent>(
+		wrapper: InstanceWrapper,
+		metadataKey: string,
+		eventType: EventType
+	): Type<TEvent> | undefined {
+		const { instance } = wrapper;
+		if (!instance || !instance.constructor) return undefined;
+
+		const metadata = Reflect.getMetadata(metadataKey, instance.constructor);
+
+		if (!metadata) return undefined;
+
+		return (metadata.eventType as EventType) === eventType
+			? (instance.constructor as Type<any>)
+			: undefined;
 	}
 }

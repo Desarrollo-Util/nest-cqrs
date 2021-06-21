@@ -2,10 +2,10 @@ import uuid from 'uuid-random';
 import { IEvent } from '../interfaces/events/event.interface';
 
 /**
- * Event
+ * Asynchronous event
  */
-export abstract class Event<T extends Record<string, any>>
-	implements IEvent<T> {
+export abstract class AsyncEvent<TAttributes extends Record<string, any> = any>
+	implements IEvent<TAttributes> {
 	/** Event id*/
 	public readonly id: string;
 	/** Event created at date */
@@ -16,7 +16,10 @@ export abstract class Event<T extends Record<string, any>>
 	 * @param type Event type
 	 * @param attributes Event attributes
 	 */
-	constructor(public readonly type: string, public readonly attributes: T) {
+	constructor(
+		public readonly type: string,
+		public readonly attributes: TAttributes
+	) {
 		this.id = uuid();
 		this.ocurredOn = new Date().toUTCString();
 	}

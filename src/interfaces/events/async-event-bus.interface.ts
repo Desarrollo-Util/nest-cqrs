@@ -1,9 +1,9 @@
 import { Type } from '@nestjs/common';
-import { IEvent } from '../../interfaces/events/event.interface';
+import { AsyncEvent } from '../../events';
 import { IEventHandler } from './event-handler.interface';
 
 /** Event bus */
-export interface IEventBus {
+export interface IAsyncEventBus {
 	/**
 	 * Initializes connection with event bus provider
 	 * @param config Event bus provider config
@@ -23,12 +23,12 @@ export interface IEventBus {
 	 * Publish an event into event bus
 	 * @param event Event
 	 */
-	publish(event: IEvent): Promise<void>;
+	publish(event: AsyncEvent): Promise<void>;
 	/**
 	 * Publish many events into event bus
 	 * @param events Events
 	 */
-	publishAll(events: IEvent[]): Promise<void>;
+	publishAll(events: AsyncEvent[]): Promise<void>;
 	/**
 	 * Closes connection to event bus
 	 */

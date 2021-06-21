@@ -5,10 +5,12 @@ import { IQueryHandler } from './queries/query-handler.interface';
 
 /** CQRS module options */
 export interface CqrsOptions {
-	/** Queries */
-	queries?: Type<IQueryHandler>[];
-	/** Commands */
-	commands?: Type<ICommandHandler>[];
-	/** Events */
-	events?: Type<IEventHandler>[];
+	/** Querie handlers */
+	queryHandlers: Type<IQueryHandler>[];
+	/** Command handlers */
+	commandHandlers: Type<ICommandHandler>[];
+	/** Sync event handlers */
+	syncEventHandlers: Type<IEventHandler>[];
+	/** Async event handlers */
+	asyncEventHandlers: Type<IEventHandler>[];
 }

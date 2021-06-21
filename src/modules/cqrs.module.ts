@@ -8,20 +8,32 @@ import {
 } from '@nestjs/common';
 import { CommandBus } from '../commands/command-bus';
 import {
+	DITokenAsyncEventBus,
+	InjectAsyncEventBus,
+} from '../decorators/inject-async-event-bus.decorator';
+import {
 	DITokenCommandBus,
 	InjectCommandBus,
 } from '../decorators/inject-command-bus.decorator';
 import { DITokenEventBusConfig } from '../decorators/inject-event-bus-config.decorator';
-import {
-	DITokenEventBus,
-	InjectEventBus,
-} from '../decorators/inject-event-bus.decorator';
+import { DITokenEventPublisher } from '../decorators/inject-event-publisher.decorator';
 import {
 	DITokenQueryBus,
 	InjectQueryBus,
 } from '../decorators/inject-query-bus.decorator';
+import {
+	DITokenSyncEventBus,
+	InjectSyncEventBus,
+} from '../decorators/inject-sync-event-bus.decorator';
+import { EventPublisher } from '../events/publisher/event-publisher';
 import { RabbitEventBus } from '../events/rabbitmq/rabbitmq-event-bus';
-import { ICommandBus, IEventBus, IQueryBus } from '../interfaces';
+import { SyncEventBus } from '../events/sync-bus/sync-event-bus';
+import {
+	IAsyncEventBus,
+	ICommandBus,
+	IQueryBus,
+	ISyncEventBus,
+} from '../interfaces';
 import {
 	CqrsModuleAsyncOptions,
 	CqrsModuleBusImplementations,
@@ -49,8 +61,10 @@ export class CqrsModule implements OnApplicationBootstrap, OnModuleDestroy {
 		private readonly commandBus: ICommandBus,
 		@InjectQueryBus()
 		private readonly queryBus: IQueryBus,
-		@InjectEventBus()
-		private readonly eventBus: IEventBus
+		@InjectSyncEventBus()
+		private readonly syncEventBus: ISyncEventBus,
+		@InjectAsyncEventBus()
+		private readonly asyncEventBus: IAsyncEventBus
 	) {}
 
 	/**
@@ -71,8 +85,16 @@ export class CqrsModule implements OnApplicationBootstrap, OnModuleDestroy {
 				useClass: implementations?.queryBus || QueryBus,
 			},
 			{
-				provide: DITokenEventBus,
-				useClass: implementations?.eventBus || RabbitEventBus,
+				provide: DITokenSyncEventBus,
+				useClass: implementations?.syncEventBus || SyncEventBus,
+			},
+			{
+				provide: DITokenAsyncEventBus,
+				useClass: implementations?.asyncEventBus || RabbitEventBus,
+			},
+			{
+				provide: DITokenEventPublisher,
+				useClass: implementations?.eventPublisher || EventPublisher,
 			},
 		];
 	}
@@ -126,12 +148,18 @@ export class CqrsModule implements OnApplicationBootstrap, OnModuleDestroy {
 	 * Binds all queries and commands on application bootstrap
 	 */
 	async onApplicationBootstrap() {
-		const { commands, queries, events } = this.explorerService.explore();
+		const {
+			commandHandlers: commands,
+			queryHandlers: queries,
+			syncEventHandlers: syncEvents,
+			asyncEventHandlers: asyncEvents,
+		} = this.explorerService.explore();
 
 		this.commandBus.register(commands);
 		this.queryBus.register(queries);
-		await this.eventBus.initialize();
-		this.eventBus.registerMany(events);
+		this.syncEventBus.registerMany(syncEvents);
+		await this.asyncEventBus.initialize();
+		this.asyncEventBus.registerMany(asyncEvents);
 	}
 
 	/**
@@ -139,7 +167,7 @@ export class CqrsModule implements OnApplicationBootstrap, OnModuleDestroy {
 	 */
 	async onModuleDestroy() {
 		Logger.verbose('Closing event bus connection', CqrsModule.name);
-		await this.eventBus.closeConnection();
+		await this.asyncEventBus.closeConnection();
 		Logger.verbose('Event bus connection closed', CqrsModule.name);
 	}
 }
