@@ -1,4 +1,4 @@
-import { Type } from '@nestjs/common';
+import { Injectable, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { EVENTS_HANDLER_METADATA } from '../../constants';
 import { UnregisteredEventHandlerMetadataException } from '../../exceptions';
@@ -13,6 +13,7 @@ type EventHandlerType = Type<IEventHandler>;
 /**
  * Sync event bus implementation
  */
+@Injectable()
 export class SyncEventBus implements ISyncEventBus {
 	/** Handlers binded to event bus */
 	private _handlers = new Map<string, IEventHandler[]>();

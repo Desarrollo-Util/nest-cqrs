@@ -23,8 +23,8 @@ export const EventsHandler = (
 ): ClassDecorator => {
 	let eventType: EventType;
 
-	if (event instanceof SyncEvent) eventType = EventType.SYNC;
-	else if (event instanceof AsyncEvent) eventType = EventType.ASYNC;
+	if (event.prototype instanceof SyncEvent) eventType = EventType.SYNC;
+	else if (event.prototype instanceof AsyncEvent) eventType = EventType.ASYNC;
 	else throw new UnrecognizedEventTypeException(event.name);
 
 	const metadata: IEventMetadata = {
