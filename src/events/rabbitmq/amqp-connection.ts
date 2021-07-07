@@ -1,8 +1,8 @@
 import { Logger } from '@nestjs/common';
 import amqpcon from 'amqp-connection-manager';
 import amqplib from 'amqplib';
-import { EMPTY, Subject, throwError } from 'rxjs';
-import { catchError, take, timeoutWith } from 'rxjs/operators';
+import { EMPTY, lastValueFrom, Subject, throwError } from 'rxjs';
+import { catchError, take, timeout } from 'rxjs/operators';
 import { IEvent } from '../../interfaces/events/event.interface';
 import {
 	ConnectionInitOptions,
@@ -75,27 +75,29 @@ export class AmqpConnection {
 			...this.config.connectionInitOptions,
 		};
 
-		const { wait, timeout, reject } = options;
+		const { wait, timeout: timeOut, reject } = options;
 
 		this.initConnection();
 		this.initChannel();
 		const promise = this.setupInitChannel(this.config.onConnectionClose);
 		if (!wait) return promise;
 
-		return this.initialized
-			.pipe(
+		return lastValueFrom(
+			this.initialized.pipe(
 				take(1),
-				timeoutWith(
-					timeout,
-					throwError(
-						new Error(
-							`Failed to connect to a RabbitMQ broker within a timeout of ${timeout}ms`
-						)
-					)
-				),
+				timeout({
+					first: timeOut,
+					with: () =>
+						throwError(
+							() =>
+								new Error(
+									`Failed to connect to a RabbitMQ broker within a timeout of ${timeout}ms`
+								)
+						),
+				}),
 				catchError(err => (reject ? throwError(err) : EMPTY))
 			)
-			.toPromise<void>();
+		);
 	}
 
 	/**
