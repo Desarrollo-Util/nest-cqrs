@@ -1,8 +1,7 @@
 import { Injectable, Logger, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { ExternalContextCreator } from '@nestjs/core/helpers/external-context-creator';
-import type amqplib from 'amqplib';
-import { ConfirmChannel, Options } from 'amqplib';
+import { ConfirmChannel, Options, Channel, ConsumeMessage } from 'amqplib';
 import { ContextTypes, EVENT_HANDLER_METHOD_NAME } from '../../constants';
 import { EVENTS_HANDLER_METADATA } from '../../constants/reflect-keys.constants';
 import { InjectEventBusConfig } from '../../decorators/inject-event-bus-config.decorator';
@@ -97,11 +96,8 @@ export class RabbitEventBus implements IAsyncEventBus {
 		if (!eventPrefix || !eventName || !actionName)
 			throw new WrongEventHandlerMetadataException(eventHandler.name);
 
-		const {
-			queueName,
-			routingKey,
-			retryRoutingKey,
-		} = this.getQueueNameAndRoutingKeys(eventPrefix, eventName, actionName);
+		const { queueName, routingKey, retryRoutingKey } =
+			this.getQueueNameAndRoutingKeys(eventPrefix, eventName, actionName);
 
 		const messageOptions = this.getMessageOptions(
 			queueName,
@@ -322,10 +318,7 @@ export class RabbitEventBus implements IAsyncEventBus {
 		};
 	}
 
-	private errorHandler(
-		channel: amqplib.Channel,
-		msg: amqplib.ConsumeMessage
-	): void {
+	private errorHandler(channel: Channel, msg: ConsumeMessage): void {
 		const retries = Number(
 			(msg.properties.headers['x-death'] &&
 				msg.properties.headers['x-death'].find(

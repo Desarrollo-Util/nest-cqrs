@@ -1,6 +1,16 @@
 import { Logger } from '@nestjs/common';
-import amqpcon from 'amqp-connection-manager';
-import amqplib from 'amqplib';
+import {
+	AmqpConnectionManager,
+	ChannelWrapper,
+	connect,
+} from 'amqp-connection-manager';
+import {
+	Channel,
+	ConsumeMessage,
+	Connection,
+	ConfirmChannel,
+	Options,
+} from 'amqplib';
 import { EMPTY, lastValueFrom, Subject, throwError } from 'rxjs';
 import { catchError, take, timeout } from 'rxjs/operators';
 import { IEvent } from '../../interfaces/events/event.interface';
@@ -25,7 +35,7 @@ const defaultConfig: Omit<RabbitMQConfig, 'uri'> = {
 		reject: true,
 	},
 	connectionManagerOptions: {},
-	errorHandler: (channel: amqplib.Channel, msg: amqplib.ConsumeMessage) => {
+	errorHandler: (channel: Channel, msg: ConsumeMessage) => {
 		channel.reject(msg, false);
 	},
 };
@@ -34,31 +44,31 @@ export class AmqpConnection {
 	private readonly config: RabbitMQConfig;
 	private readonly logger: Logger;
 	private readonly initialized = new Subject<void>();
-	private _managedConnection!: amqpcon.AmqpConnectionManager;
-	private _managedChannel!: amqpcon.ChannelWrapper;
-	private _channel?: amqplib.Channel;
-	private _connection?: amqplib.Connection;
+	private _managedConnection!: AmqpConnectionManager;
+	private _managedChannel!: ChannelWrapper;
+	private _channel?: Channel;
+	private _connection?: Connection;
 
 	constructor(config: RabbitMQConfig) {
 		this.config = { ...defaultConfig, ...config };
 		this.logger = new Logger(AmqpConnection.name);
 	}
 
-	get channel(): amqplib.Channel {
+	get channel(): Channel {
 		if (!this._channel) throw new Error('channel is not available');
 		return this._channel;
 	}
 
-	get connection(): amqplib.Connection {
+	get connection(): Connection {
 		if (!this._connection) throw new Error('connection is not available');
 		return this._connection;
 	}
 
-	get managedChannel(): amqpcon.ChannelWrapper {
+	get managedChannel(): ChannelWrapper {
 		return this._managedChannel;
 	}
 
-	get managedConnection(): amqpcon.AmqpConnectionManager {
+	get managedConnection(): AmqpConnectionManager {
 		return this._managedConnection;
 	}
 
@@ -106,7 +116,7 @@ export class AmqpConnection {
 	private initConnection(): void {
 		this.logger.log('Trying to connect to a RabbitMQ broker');
 
-		this._managedConnection = amqpcon.connect(
+		this._managedConnection = connect(
 			Array.isArray(this.config.uri) ? this.config.uri : [this.config.uri],
 			this.config.connectionManagerOptions
 		);
@@ -147,30 +157,28 @@ export class AmqpConnection {
 	private async setupInitChannel(
 		onConnectionClose?: () => void
 	): Promise<void> {
-		await this._managedChannel.addSetup(
-			async (channel: amqplib.ConfirmChannel) => {
-				this._channel = channel;
+		await this._managedChannel.addSetup(async (channel: ConfirmChannel) => {
+			this._channel = channel;
 
-				this.config.exchanges.forEach(async x =>
-					channel.assertExchange(
-						x.name,
-						x.type || this.config.defaultExchangeType,
-						x.options
-					)
-				);
+			this.config.exchanges.forEach(async x =>
+				channel.assertExchange(
+					x.name,
+					x.type || this.config.defaultExchangeType,
+					x.options
+				)
+			);
 
-				await channel.prefetch(this.config.prefetchCount);
+			await channel.prefetch(this.config.prefetchCount);
 
-				channel.once(
-					'close',
-					onConnectionClose
-						? onConnectionClose
-						: () => this.logger.log('Lost connection to RabbitMQ channel')
-				);
+			channel.once(
+				'close',
+				onConnectionClose
+					? onConnectionClose
+					: () => this.logger.log('Lost connection to RabbitMQ channel')
+			);
 
-				this.initialized.next();
-			}
-		);
+			this.initialized.next();
+		});
 	}
 
 	public async createSubscriber<T>(
@@ -185,7 +193,7 @@ export class AmqpConnection {
 	private async setupSubscriberChannel<T>(
 		handler: (msg: T) => void | Promise<void>,
 		msgOptions: IRabbitMQMessageOptions,
-		channel: amqplib.ConfirmChannel
+		channel: ConfirmChannel
 	): Promise<void> {
 		const { exchangeName: exchange, routingKey } = msgOptions;
 
@@ -231,7 +239,7 @@ export class AmqpConnection {
 		exchange: string,
 		routingKey: string,
 		message: IEvent,
-		options?: amqplib.Options.Publish
+		options?: Options.Publish
 	) {
 		if (!this.managedConnection.isConnected() || !this._channel)
 			throw new Error('AMQP connection is not available');

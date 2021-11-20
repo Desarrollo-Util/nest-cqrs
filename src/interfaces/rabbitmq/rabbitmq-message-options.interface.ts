@@ -1,4 +1,4 @@
-import type amqplib from 'amqplib';
+import type { Channel, ConsumeMessage } from 'amqplib';
 import { QueueOptions } from './rabbitmq-queue-options.interface';
 
 /** RabbitMQ message options */
@@ -12,9 +12,5 @@ export interface IRabbitMQMessageOptions {
 	/** Queue options for message */
 	queueOptions?: QueueOptions;
 	/** Specific error handler for message*/
-	errorHandler?: (
-		channel: amqplib.Channel,
-		msg: amqplib.ConsumeMessage,
-		error?: Error
-	) => void;
+	errorHandler?: (channel: Channel, msg: ConsumeMessage, error?: Error) => void;
 }

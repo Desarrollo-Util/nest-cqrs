@@ -1,5 +1,5 @@
-import type amqpConnectionManager from 'amqp-connection-manager';
-import type amqplib from 'amqplib';
+import type { AmqpConnectionManagerOptions } from 'amqp-connection-manager';
+import type { Channel, ConsumeMessage } from 'amqplib';
 import { RabbitMQExchangeConfig } from './rabbitmq-exchange-config.interface';
 
 /** Initialize connection options */
@@ -25,15 +25,11 @@ export interface RabbitMQConfig {
 	/** Connection initialization config */
 	connectionInitOptions: ConnectionInitOptions;
 	/** Connection manager options */
-	connectionManagerOptions?: amqpConnectionManager.AmqpConnectionManagerOptions;
+	connectionManagerOptions?: AmqpConnectionManagerOptions;
 	/** Callback to execute when connection close */
 	onConnectionClose?: () => void;
 	/** Error handler */
-	errorHandler: (
-		channel: amqplib.Channel,
-		msg: amqplib.ConsumeMessage,
-		error?: Error
-	) => void;
+	errorHandler: (channel: Channel, msg: ConsumeMessage, error?: Error) => void;
 }
 
 export interface RabbitMQModuleConfig
