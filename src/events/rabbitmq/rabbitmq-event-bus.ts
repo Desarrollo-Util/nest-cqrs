@@ -1,4 +1,9 @@
-import { Injectable, Logger, Type } from '@nestjs/common';
+import {
+	Injectable,
+	Logger,
+	OnApplicationShutdown,
+	Type,
+} from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { ExternalContextCreator } from '@nestjs/core/helpers/external-context-creator';
 import { ConfirmChannel, Options, Channel, ConsumeMessage } from 'amqplib';
@@ -24,7 +29,7 @@ import { AmqpConnection } from './amqp-connection';
  * Rabbit MQ event bus implementation
  */
 @Injectable()
-export class RabbitEventBus implements IAsyncEventBus {
+export class RabbitEventBus implements IAsyncEventBus, OnApplicationShutdown {
 	/** AMQP connection to RabbitMQ */
 	private _amqpConnection: AmqpConnection;
 	/** Is connection initialized */
@@ -41,6 +46,8 @@ export class RabbitEventBus implements IAsyncEventBus {
 	private _retryQueue: string;
 	/** Application prefix */
 	private _prefix: string;
+	/** Is event bus closed */
+	private _isClose: boolean = false;
 
 	/**
 	 * Creates a new command bus
@@ -69,6 +76,7 @@ export class RabbitEventBus implements IAsyncEventBus {
 		await this.bindDefaultQueues(retryTtl);
 
 		this._initialized = true;
+		this._isClose = false;
 	}
 
 	/**
@@ -163,9 +171,19 @@ export class RabbitEventBus implements IAsyncEventBus {
 	}
 
 	/**
-	 * Closes managed connection to RabbitMQ
+	 * Closes managed subcriptions to RabbitMQ
 	 */
 	public async closeConnection(): Promise<void> {
+		if (this._initialized) {
+			this._isClose = true;
+			await this._amqpConnection.unsubcribeAll();
+		}
+	}
+
+	/**
+	 * Closes managed connection to RabbitMQ
+	 */
+	async onApplicationShutdown() {
 		if (this._initialized) await this._amqpConnection.managedConnection.close();
 	}
 
@@ -233,7 +251,15 @@ export class RabbitEventBus implements IAsyncEventBus {
 	 * @param config RabbitMQ config
 	 */
 	private async initConnection(config: RabbitMQConfig): Promise<void> {
-		this._amqpConnection = new AmqpConnection(config);
+		const lostConnectionFn = config.onConnectionLost
+			? () => {
+					if (!this._isClose) config.onConnectionLost();
+			  }
+			: undefined;
+		this._amqpConnection = new AmqpConnection({
+			...config,
+			onConnectionLost: lostConnectionFn,
+		});
 		await this._amqpConnection.init();
 	}
 

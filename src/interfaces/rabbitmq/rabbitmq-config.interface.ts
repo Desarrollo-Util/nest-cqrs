@@ -27,7 +27,7 @@ export interface RabbitMQConfig {
 	/** Connection manager options */
 	connectionManagerOptions?: AmqpConnectionManagerOptions;
 	/** Callback to execute when connection close */
-	onConnectionClose?: () => void;
+	onConnectionLost?: () => void;
 	/** Error handler */
 	errorHandler: (channel: Channel, msg: ConsumeMessage, error?: Error) => void;
 }

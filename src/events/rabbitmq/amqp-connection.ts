@@ -10,6 +10,7 @@ import {
 	Connection,
 	ConfirmChannel,
 	Options,
+	Replies,
 } from 'amqplib';
 import { EMPTY, lastValueFrom, Subject, throwError } from 'rxjs';
 import { catchError, take, timeout } from 'rxjs/operators';
@@ -48,6 +49,7 @@ export class AmqpConnection {
 	private _managedChannel!: ChannelWrapper;
 	private _channel?: Channel;
 	private _connection?: Connection;
+	private _consumeSubscriptions: Replies.Consume[] = [];
 
 	constructor(config: RabbitMQConfig) {
 		this.config = { ...defaultConfig, ...config };
@@ -89,7 +91,7 @@ export class AmqpConnection {
 
 		this.initConnection();
 		this.initChannel();
-		const promise = this.setupInitChannel(this.config.onConnectionClose);
+		const promise = this.setupInitChannel(this.config.onConnectionLost);
 		if (!wait) return promise;
 
 		return lastValueFrom(
@@ -208,7 +210,7 @@ export class AmqpConnection {
 			routingKeys.map(x => channel.bindQueue(queue, exchange, x))
 		);
 
-		await channel.consume(queue, async msg => {
+		const tagConsumer = await channel.consume(queue, async msg => {
 			let message: T;
 
 			try {
@@ -226,6 +228,7 @@ export class AmqpConnection {
 				else this.config.errorHandler(channel, msg, e);
 			}
 		});
+		this._consumeSubscriptions.push(tagConsumer);
 	}
 
 	/**
@@ -249,5 +252,13 @@ export class AmqpConnection {
 			: Buffer.alloc(0);
 
 		this._channel.publish(exchange, routingKey, buffer, options);
+	}
+
+	public async unsubcribeAll() {
+		await Promise.all(
+			this._consumeSubscriptions.map(sub =>
+				this.channel.cancel(sub.consumerTag)
+			)
+		);
 	}
 }
