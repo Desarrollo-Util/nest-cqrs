@@ -255,10 +255,12 @@ export class AmqpConnection {
 	}
 
 	public async unsubcribeAll() {
+		this.logger.log(`Unsubscribe to all queues...`);
 		await Promise.all(
 			this._consumeSubscriptions.map(sub =>
 				this.channel.cancel(sub.consumerTag)
 			)
 		);
+		this.logger.log(`Unsubscribe finish`);
 	}
 }

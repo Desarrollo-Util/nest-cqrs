@@ -184,7 +184,9 @@ export class RabbitEventBus implements IAsyncEventBus, OnApplicationShutdown {
 	 * Closes managed connection to RabbitMQ
 	 */
 	async onApplicationShutdown() {
+		Logger.log('Closing connection...', RabbitEventBus.name);
 		if (this._initialized) await this._amqpConnection.managedConnection.close();
+		Logger.log('Connection closed', RabbitEventBus.name);
 	}
 
 	//#endregion
