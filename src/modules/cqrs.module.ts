@@ -166,8 +166,8 @@ export class CqrsModule implements OnApplicationBootstrap, OnModuleDestroy {
 	 * Closes event bus connection on module destroy
 	 */
 	async onModuleDestroy() {
-		Logger.verbose('Closing event bus connection', CqrsModule.name);
+		Logger.log('Closing event bus connection', CqrsModule.name);
 		await this.asyncEventBus.closeConnection();
-		Logger.verbose('Event bus connection closed', CqrsModule.name);
+		Logger.log('Event bus connection closed', CqrsModule.name);
 	}
 }

@@ -6,7 +6,8 @@ import {
 } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { ExternalContextCreator } from '@nestjs/core/helpers/external-context-creator';
-import { ConfirmChannel, Options, Channel, ConsumeMessage } from 'amqplib';
+import { Channel, ConfirmChannel, ConsumeMessage, Options } from 'amqplib';
+import { filter, first, lastValueFrom } from 'rxjs';
 import { ContextTypes, EVENT_HANDLER_METHOD_NAME } from '../../constants';
 import { EVENTS_HANDLER_METADATA } from '../../constants/reflect-keys.constants';
 import { InjectEventBusConfig } from '../../decorators/inject-event-bus-config.decorator';
@@ -30,6 +31,7 @@ import { AmqpConnection } from './amqp-connection';
  */
 @Injectable()
 export class RabbitEventBus implements IAsyncEventBus, OnApplicationShutdown {
+	private readonly logger: Logger;
 	/** AMQP connection to RabbitMQ */
 	private _amqpConnection: AmqpConnection;
 	/** Is connection initialized */
@@ -58,7 +60,9 @@ export class RabbitEventBus implements IAsyncEventBus, OnApplicationShutdown {
 		@InjectEventBusConfig()
 		private readonly config: RabbitMQModuleConfig,
 		private readonly externalContextCreator: ExternalContextCreator
-	) {}
+	) {
+		this.logger = new Logger(this.constructor.name);
+	}
 
 	//#region Public methods
 
@@ -89,10 +93,7 @@ export class RabbitEventBus implements IAsyncEventBus, OnApplicationShutdown {
 
 		const instance = this.moduleRef.get(eventHandler, { strict: false });
 		if (!instance) {
-			Logger.warn(
-				`Not found instance for ${eventHandler.name}`,
-				RabbitEventBus.name
-			);
+			this.logger.warn(`Not found instance for ${eventHandler.name}`);
 			return;
 		}
 
@@ -176,17 +177,31 @@ export class RabbitEventBus implements IAsyncEventBus, OnApplicationShutdown {
 	public async closeConnection(): Promise<void> {
 		if (this._initialized) {
 			this._isClose = true;
+			this.logger.log('Unsubscribing all handlers...');
 			await this._amqpConnection.unsubcribeAll();
 		}
+
+		this.logger.log(
+			`Wait for ${this._amqpConnection.numEvents.value} events end...`
+		);
+
+		await lastValueFrom(
+			this._amqpConnection.numEvents.pipe(
+				filter(num => num === 0),
+				first()
+			)
+		);
+
+		this.logger.log(`All events end...`);
 	}
 
 	/**
 	 * Closes managed connection to RabbitMQ
 	 */
 	async onApplicationShutdown() {
-		Logger.log('Closing connection...', RabbitEventBus.name);
+		this.logger.log('Closing connection...');
 		if (this._initialized) await this._amqpConnection.managedConnection.close();
-		Logger.log('Connection closed', RabbitEventBus.name);
+		this.logger.log('Connection closed');
 	}
 
 	//#endregion

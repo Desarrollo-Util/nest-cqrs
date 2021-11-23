@@ -6,13 +6,19 @@ import {
 } from 'amqp-connection-manager';
 import {
 	Channel,
-	ConsumeMessage,
-	Connection,
 	ConfirmChannel,
+	Connection,
+	ConsumeMessage,
 	Options,
 	Replies,
 } from 'amqplib';
-import { EMPTY, lastValueFrom, Subject, throwError } from 'rxjs';
+import {
+	BehaviorSubject,
+	EMPTY,
+	lastValueFrom,
+	Subject,
+	throwError,
+} from 'rxjs';
 import { catchError, take, timeout } from 'rxjs/operators';
 import { IEvent } from '../../interfaces/events/event.interface';
 import {
@@ -50,6 +56,7 @@ export class AmqpConnection {
 	private _channel?: Channel;
 	private _connection?: Connection;
 	private _consumeSubscriptions: Replies.Consume[] = [];
+	public numEvents = new BehaviorSubject(0);
 
 	constructor(config: RabbitMQConfig) {
 		this.config = { ...defaultConfig, ...config };
@@ -219,6 +226,8 @@ export class AmqpConnection {
 				return;
 			}
 
+			this.numEvents.next(this.numEvents.value + 1);
+
 			try {
 				await handler(message);
 
@@ -226,6 +235,8 @@ export class AmqpConnection {
 			} catch (e) {
 				if (msgOptions.errorHandler) msgOptions.errorHandler(channel, msg, e);
 				else this.config.errorHandler(channel, msg, e);
+			} finally {
+				this.numEvents.next(this.numEvents.value - 1);
 			}
 		});
 		this._consumeSubscriptions.push(tagConsumer);

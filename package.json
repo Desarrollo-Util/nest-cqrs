@@ -1,6 +1,6 @@
 {
 	"name": "@learnthis/nest-cqrs",
-	"version": "0.4.1",
+	"version": "0.5.0",
 	"description": "",
 	"main": "dist/index.js",
 	"types": "dist/index",
@@ -19,11 +19,11 @@
 	"author": "Desarrollo Util",
 	"license": "GPLv3",
 	"devDependencies": {
-		"@nestjs/common": "^8.2.2",
-		"@nestjs/core": "^8.2.2",
+		"@nestjs/common": "^8.2.3",
+		"@nestjs/core": "^8.2.3",
 		"@types/amqp-connection-manager": "^2.0.12",
 		"@types/amqplib": "^0.8.2",
-		"@types/node": "^16.11.9",
+		"@types/node": "^16.11.10",
 		"prettier": "^2.4.1",
 		"reflect-metadata": "^0.1.13",
 		"rimraf": "^3.0.2",
