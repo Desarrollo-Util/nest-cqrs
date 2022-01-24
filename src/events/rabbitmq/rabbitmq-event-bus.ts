@@ -175,6 +175,8 @@ export class RabbitEventBus implements IAsyncEventBus, OnApplicationShutdown {
 	 * Closes managed subcriptions to RabbitMQ
 	 */
 	public async closeConnection(): Promise<void> {
+		if (!this._amqpConnection) return;
+
 		if (this._initialized) {
 			this._isClose = true;
 			this.logger.log('Unsubscribing all handlers...');
@@ -199,6 +201,8 @@ export class RabbitEventBus implements IAsyncEventBus, OnApplicationShutdown {
 	 * Closes managed connection to RabbitMQ
 	 */
 	async onApplicationShutdown() {
+		if (!this._amqpConnection) return;
+
 		this.logger.log('Closing connection...');
 		if (this._initialized) await this._amqpConnection.managedConnection.close();
 		this.logger.log('Connection closed');
