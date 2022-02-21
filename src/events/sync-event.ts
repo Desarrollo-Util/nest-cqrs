@@ -5,7 +5,8 @@ import { IEvent } from '../interfaces/events/event.interface';
  * Synchronous event
  */
 export abstract class SyncEvent<TAttributes extends Record<string, any> = any>
-	implements IEvent<TAttributes> {
+	implements IEvent<TAttributes>
+{
 	/** Event id*/
 	public readonly id: string;
 	/** Event created at date */

@@ -14,7 +14,8 @@ type CommandHandlerType = Type<ICommandHandler>;
  *	Base command bus
  */
 export abstract class BaseCommandBus<CommandBase extends ICommand = ICommand>
-	implements ICommandBus<CommandBase> {
+	implements ICommandBus<CommandBase>
+{
 	/** Handlers binded to command bus */
 	private _handlers = new Map<string, ICommandHandler<CommandBase>>();
 

@@ -14,7 +14,8 @@ type QueryHandlerType = Type<IQueryHandler>;
  *	Base query bus
  */
 export abstract class BaseQueryBus<QueryBase extends IQuery = IQuery>
-	implements IQueryBus<QueryBase> {
+	implements IQueryBus<QueryBase>
+{
 	/** Handlers binded to query bus */
 	private _handlers = new Map<string, IQueryHandler<QueryBase>>();
 
